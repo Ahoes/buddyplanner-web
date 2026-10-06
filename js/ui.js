@@ -301,9 +301,9 @@ function renderGB() {
   h += `<div class="card"><table class="stops gbt"><thead><tr><th>Paso</th><th>Añades (bar)</th><th>Hasta (bar)</th><th>Coste</th></tr></thead><tbody>
     <tr><td>Inicio</td><td>—</td><td>${F(p0, 1)}</td><td>—</td></tr>${purga ? `<tr class="sw"><td>1. Vaciar</td><td>−${F(p0 - r.vaciar, 1)}</td><td>${F(r.vaciar, 1)}</td><td>—</td></tr>` : ''}${filas}</tbody></table></div>`;
   h += `<div class="card"><h3>Desglose</h3>
-    ${row('Helio', `${F(r.litros.he, 0)} L × ${F(pr.he, 3)} € = ${EUR(r.litros.he * pr.he)}`)}
-    ${row('Oxígeno', `${F(r.litros.o2, 0)} L × ${F(pr.o2, 3)} € = ${EUR(r.litros.o2 * pr.o2)}`)}
-    ${row('Aire', `${F(r.litros.aire, 0)} L × ${F(pr.aire, 3)} € = ${EUR(r.litros.aire * pr.aire)}`)}
+    ${row('Helio', `${F(r.litros.he, 0)} L × ${F(pr.he, 4)} € = ${EUR(r.litros.he * pr.he)}`)}
+    ${row('Oxígeno', `${F(r.litros.o2, 0)} L × ${F(pr.o2, 4)} € = ${EUR(r.litros.o2 * pr.o2)}`)}
+    ${row('Aire', `${F(r.litros.aire, 0)} L × ${F(pr.aire, 4)} € = ${EUR(r.litros.aire * pr.aire)}`)}
     ${row('Total', EUR(r.coste))}</div>`;
   if (o1 < 18) h += hipoxica(o1);
   out.innerHTML = h;

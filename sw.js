@@ -1,6 +1,6 @@
 // BuddyPlanner: funcionamiento sin conexión.
 // Al publicar una versión nueva, cambia el número de VERSION.
-const VERSION = 'buddyplanner-v0.1-9';
+const VERSION = 'buddyplanner-v0.1-10';
 const ARCHIVOS = ['./', './index.html', './manifest.webmanifest',
   './css/styles.css', './js/engine.js', './js/ui.js', './js/pwa.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'];

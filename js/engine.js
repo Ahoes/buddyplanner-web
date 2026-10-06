@@ -1,4 +1,4 @@
-// BuddyPlanner · motor de cálculo (sin dependencias del navegador; se prueba con node --test)
+// MyBuddyPlanner · motor de cálculo (sin dependencias del navegador; se prueba con node --test)
 // ===== Motor de cálculo =====
 const ENG = (() => {
   const ceilTo = (x) => Math.ceil(x - 1e-9);

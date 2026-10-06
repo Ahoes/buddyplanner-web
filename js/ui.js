@@ -1,4 +1,4 @@
-// BuddyPlanner · interfaz
+// MyBuddyPlanner · interfaz
 // ===== Interfaz =====
 const $ = (id) => document.getElementById(id);
 const num = (id) => { const s = String($(id).value).trim().replace(',', '.'); if (s === '') return null; const n = Number(s); return isFinite(n) ? n : null; };

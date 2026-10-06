@@ -1,4 +1,4 @@
-// BuddyPlanner · app instalable (service worker y botón Instalar)
+// MyBuddyPlanner · app instalable (service worker y botón Instalar)
 const $p = (id) => document.getElementById(id);
 // ===== App instalable =====
 if ('serviceWorker' in navigator && location.protocol === 'https:') {

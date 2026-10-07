@@ -114,21 +114,25 @@ const ENG = (() => {
     gases.forEach(g => { g.fO2 = g.o2 / 100; g.fHe = g.he / 100; g.fN2 = 1 - g.fO2 - g.fHe; g.nombre = nombreGas(g.o2, g.he); g.litros = 0; g.tiempo = 0; g.desde = null; });
 
     const C = coef(p.modelo || 'C');
-    const pN2 = new Array(16).fill((psurf - PWV) * 0.7902);
+    const pN2 = new Array(16).fill((psurf - PWV) * 0.781); // nitrógeno del aire como Subsurface
     const pHe = new Array(16).fill(0);
     let cns = 0, otu = 0, runtime = 0;
+
+    // tejidos (Schreiner)
+    function cargar(n2, he, d0, d1, t, g) {
+      const pa0 = P(d0) - PWV, rate = (P(d1) - P(d0)) / t;
+      for (let i = 0; i < 16; i++) {
+        let k = LN2 / C.nHT[i], pi0 = pa0 * g.fN2, R = rate * g.fN2;
+        n2[i] = pi0 + R * (t - 1 / k) - (pi0 - n2[i] - R / k) * Math.exp(-k * t);
+        k = LN2 / C.hHT[i]; pi0 = pa0 * g.fHe; R = rate * g.fHe;
+        he[i] = pi0 + R * (t - 1 / k) - (pi0 - he[i] - R / k) * Math.exp(-k * t);
+      }
+    }
 
     const log = [];
     function segmento(d0, d1, t, g, tipo) {
       if (t <= 0) return;
-      // tejidos (Schreiner)
-      const pa0 = P(d0) - PWV, rate = (P(d1) - P(d0)) / t;
-      for (let i = 0; i < 16; i++) {
-        let k = LN2 / C.nHT[i], pi0 = pa0 * g.fN2, R = rate * g.fN2;
-        pN2[i] = pi0 + R * (t - 1 / k) - (pi0 - pN2[i] - R / k) * Math.exp(-k * t);
-        k = LN2 / C.hHT[i]; pi0 = pa0 * g.fHe; R = rate * g.fHe;
-        pHe[i] = pi0 + R * (t - 1 / k) - (pi0 - pHe[i] - R / k) * Math.exp(-k * t);
-      }
+      cargar(pN2, pHe, d0, d1, t, g);
       // oxígeno y gas, por pasos
       const n = Math.max(1, Math.ceil(t / 0.1));
       const dt = t / n;
@@ -147,16 +151,50 @@ const ENG = (() => {
       else log.push({ tipo, d0, d1, t, gas: g.nombre, fin: runtime });
     }
 
-    function techo(gf) {
+    // presión ambiente mínima tolerada con un GF fijo
+    function presionTolerada(gf, n2 = pN2, he = pHe) {
       let max = 0;
       for (let i = 0; i < 16; i++) {
-        const pt = pN2[i] + pHe[i];
-        const a = (C.nA[i] * pN2[i] + C.hA[i] * pHe[i]) / pt;
-        const b = (C.nB[i] * pN2[i] + C.hB[i] * pHe[i]) / pt;
+        const pt = n2[i] + he[i];
+        const a = (C.nA[i] * n2[i] + C.hA[i] * he[i]) / pt;
+        const b = (C.nB[i] * n2[i] + C.hB[i] * he[i]) / pt;
         const ptol = (pt - a * gf) / (gf / b + 1 - gf);
         if (ptol > max) max = ptol;
       }
-      return (max - psurf) / barM; // metros
+      return max;
+    }
+    const techo = (gf) => (presionTolerada(gf) - psurf) / barM; // metros
+
+    // Techo con GF variable como Subsurface: la línea recta va sobre la presión tolerada,
+    // entre el GF alto en superficie y el GF bajo en el ancla (presión pAncla).
+    let pAncla;
+    function techoGF(n2, he) {
+      const gfL = p.gfLow / 100, gfH = p.gfHigh / 100, s = psurf, g = pAncla;
+      let ret = 0;
+      for (let i = 0; i < 16; i++) {
+        const pt = n2[i] + he[i];
+        const a = (C.nA[i] * n2[i] + C.hA[i] * he[i]) / pt;
+        const b = (C.nB[i] * n2[i] + C.hB[i] * he[i]) / pt;
+        let tol = ret;
+        if ((s / b + a - s) * gfH + s < (g / b + a - g) * gfL + g)
+          tol = (-a * b * (gfH * g - gfL * s) - (1 - b) * (gfH - gfL) * g * s + b * (g - s) * pt) /
+            (-a * b * (gfH - gfL) + (1 - b) * (gfL * g - gfH * s) + b * (g - s));
+        if (tol > ret) ret = tol;
+      }
+      return (ret - psurf) / barM; // metros
+    }
+
+    // Prueba de ascenso (como Subsurface): sube de d a "hasta" en pasos de 2 s y en cada paso
+    // el techo no puede quedar por debajo de la profundidad a la que se va a subir.
+    function puedeSubir(d, hasta, vel, g) {
+      const n2 = pN2.slice(), he = pHe.slice(), dt = 2 / 60;
+      while (d > hasta + 1e-9) {
+        const paso = Math.min(vel * dt, d);
+        cargar(n2, he, d, d, dt, g);
+        if (techoGF(n2, he) > d - paso + 1e-6) return false;
+        d -= paso;
+      }
+      return true;
     }
 
     const fondo = gases[0];
@@ -166,10 +204,11 @@ const ENG = (() => {
     segmento(0, p.prof, tDesc, fondo, 'descenso');
     segmento(p.prof, p.prof, p.tiempo - tDesc, fondo, 'fondo');
 
-    const gfL = p.gfLow / 100, gfH = p.gfHigh / 100;
+    const gfL = p.gfLow / 100;
     let primera = Math.ceil(Math.max(0, techo(gfL)) / 3 - 1e-9) * 3;
     if (primera >= p.prof) primera = Math.floor((p.prof - 0.001) / 3) * 3;
-    const gfEn = (d) => primera <= 0 ? gfH : (d >= primera ? gfL : gfH + (gfL - gfH) * d / primera);
+    // ancla del GF bajo: techo exacto con GF bajo al final del fondo, y como mínimo 1 bar por debajo de la superficie (Subsurface)
+    pAncla = Math.max(psurf + 1, presionTolerada(gfL));
 
     const mejorGas = (d, actual) => {
       let best = actual;
@@ -197,8 +236,9 @@ const ENG = (() => {
         if (gas.desde === null) gas.desde = nivel;
       }
       const siguiente = nivel === p.ultimaParada ? 0 : nivel - 3;
+      const velSig = (siguiente > 0 ? siguiente >= primera : nivel > primera) ? p.vAsc1 : p.vAsc2;
       let g2 = 0, paro = false;
-      if (minimo > 0 || techo(gfEn(siguiente)) > siguiente + 1e-6) {
+      if (minimo > 0 || !puedeSubir(nivel, siguiente, velSig, gas)) {
         paro = true;
         if (inicioDeco === null) inicioDeco = runtime;
         const ref = paradas.length ? paradas[paradas.length - 1].rt : runtime;
@@ -206,7 +246,7 @@ const ENG = (() => {
         if (minimo > 0) segmento(nivel, nivel, 1, gas, 'cambio'); // minuto de cambio de gas, siempre
         const frac = Math.ceil(runtime - 1e-6) - runtime;
         if (frac > 1e-6) segmento(nivel, nivel, frac, gas, 'parada');
-        while (techo(gfEn(siguiente)) > siguiente + 1e-6 && g2++ < 2000) segmento(nivel, nivel, 1, gas, 'parada');
+        while (!puedeSubir(nivel, siguiente, velSig, gas) && g2++ < 2000) segmento(nivel, nivel, 1, gas, 'parada');
       }
       if (paro) {
         const ini = paradas.length ? paradas[paradas.length - 1].rt : inicioDeco;

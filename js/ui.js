@@ -160,7 +160,7 @@ function renderDecoCore() {
   const out = $('dc-out');
   const d = num('dc-d'), t = num('dc-t'), gfl = num('dc-gfl'), gfh = num('dc-gfh'), alt = num('dc-alt') ?? 0;
   const fo2 = num('dc-fo2'), fhe = num('dc-fhe') ?? 0, vd = num('dc-vd'), va = num('dc-va');
-  const ppMax = num('mz-pp') ?? 1.4, endMax = num('mz-end') ?? 30;
+  const ppMax = num('mz-pp') ?? 1.29, endMax = num('mz-end') ?? 30;
   // nombres de gases de deco
   decoGases.forEach((g, i) => { const el = $('dc-gn-' + i); if (!el) return;
     el.innerHTML = (g.o2 > 0 && g.o2 <= 100) ? `<b>${ENG.nombreGas(g.o2, g.he || 0)}</b>MOD ${F((1.6 / (g.o2 / 100) - 1) * 10, 0)} m` : '<b>–</b>'; });
@@ -208,8 +208,8 @@ function renderDecoCore() {
   const run = (o) => { const x = ENG.planDeco({ ...base, ...o }); return x.error ? null : dm(x); };
   const tp = run({ tiempo: t + 5 }), tm = t - 5 > d / vd ? run({ tiempo: t - 5 }) : null;
   const dp = run({ prof: d + 3 }), dmn = d - 3 > 0 ? run({ prof: d - 3 }) : null;
-  const sg = (x) => x == null ? '–' : `${x} min (${x - deco >= 0 ? '+' : '−'}${Math.abs(x - deco)})`;
-  sens.push(row(`+5 min (${Fn(t + 5)} min)`, sg(tp)), row(`−5 min (${Fn(t - 5)} min)`, sg(tm)), row(`+3 m (${Fn(d + 3)} m)`, sg(dp)), row(`−3 m (${Fn(d - 3)} m)`, sg(dmn)));
+  const sg = (x) => x == null ? '–' : `${x - deco >= 0 ? '+' : '−'}${Math.abs(x - deco)}' de deco`;
+  sens.push(row('+5 min', sg(tp)), row('−5 min', sg(tm)), row('+3 m', sg(dp)), row('−3 m', sg(dmn)));
   const rMin = (tp != null && tm != null) ? (tp - tm) / 10 : null;
   const rM = (dp != null && dmn != null) ? (dp - dmn) / 6 : null;
   sens.push(row('Ratio por minuto de fondo', rMin == null ? '–' : `${F(rMin, 1)} min de deco`), row('Ratio por metro', rM == null ? '–' : `${F(rM, 1)} min de deco`));

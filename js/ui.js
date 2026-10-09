@@ -10,13 +10,12 @@ const msg = (c, t) => `<div class="msg ${c}">${t}</div>`;
 
 const BIB = [[10, '10 L'], [12, '12 L'], [15, '15 L'], [18, '18 L'], [20, '2x10 L'], [24, '2x12 L'], [30, '2x15 L'], [36, '2x18 L']]; // de menor a mayor volumen
 const DECO_BOT = [[5.7, 'S40 (5,7 L)'], [6, '6 L'], [7, '7 L'], [11.1, 'S80 (11,1 L)']];
-// desplegables sin elegir: muestran en gris un ejemplo (opción vacía oculta)
-const ejemplo = (t) => `<option value="" disabled selected hidden>${t}</option>`;
+const ejemplo = () => '<option value="" disabled selected hidden></option>'; // desplegable en blanco hasta que se elija
 let bib = null; // hasta que el usuario elija botella
 const bibName = () => bib ? BIB.find(b => b[0] === bib)[1] : '';
 document.querySelectorAll('select.bib').forEach(s => {
   s.required = true;
-  s.innerHTML = BIB.map(([v, l]) => `<option value="${v}">${l}</option>`).join('') + ejemplo('2x12 L'); // el ejemplo al final: algunos móviles lo muestran en la lista
+  s.innerHTML = BIB.map(([v, l]) => `<option value="${v}">${l}</option>`).join('') + ejemplo(); // la opción en blanco al final: algunos móviles la muestran en la lista
   s.addEventListener('change', e => { bib = Number(e.target.value); document.querySelectorAll('select.bib').forEach(o => o.value = String(bib)); renderAll(); });
 });
 
@@ -234,12 +233,12 @@ function renderDecoCore() {
   const logRows = r.log.map(l => `<tr${l.tipo === 'cambio' ? ' class="sw"' : ''}><td>${TIPO[l.tipo]} ${l.d0 === l.d1 ? l.d0 + ' m' : Fn(l.d0) + '→' + Fn(l.d1) + ' m'}</td><td>${mt(l.t)}</td><td>${gasCorto(l.gas)}</td><td>${mt(l.fin)}</td></tr>`).join('');
   const stopsRows = r.paradas.map(s => `<tr><td>${s.prof} m</td><td>${s.tiempo}'</td><td>${gasCorto(s.gas)}</td><td>${Math.ceil(s.rt - 1e-9)}'</td></tr>`).join('');
   const fondoBar = bib ? Math.ceil(fondoG.litros / bib - 1e-9) : null;
-  const sacBox = (key, val, gas) => `<label class="sacbox">SAC <input id="sac-${key}" data-sac="${key}" inputmode="decimal" value="${val == null ? '' : Fn(val)}" placeholder="${key === 'f' ? 20 : 16}" aria-label="SAC de ${gas}"> L/min</label>`;
+  const sacBox = (key, val, gas) => `<label class="sacbox">SAC <input id="sac-${key}" data-sac="${key}" inputmode="decimal" value="${val == null ? '' : Fn(val)}" aria-label="SAC de ${gas}"> L/min</label>`;
   const sinSac = '<p class="hint" style="margin:6px 0 0">Escribe tu SAC para calcular el gas.</p>';
   const decoCards = decoG.map(g => {
     const L = g.litros, Le = L * 1.5, b = Math.ceil(L / g.cfg.bot - 1e-9), be = Math.ceil(Le / g.cfg.bot - 1e-9);
     const conSac = !!g.cfg.sac, conBot = !!g.cfg.bot;
-    const opts = DECO_BOT.map(([v, l]) => `<option value="${v}"${v === g.cfg.bot ? ' selected' : ''}>${l}</option>`).join('') + (conBot ? '' : ejemplo(g.o2 === 100 ? 'S40 (5,7 L)' : 'S80 (11,1 L)'));
+    const opts = DECO_BOT.map(([v, l]) => `<option value="${v}"${v === g.cfg.bot ? ' selected' : ''}>${l}</option>`).join('') + (conBot ? '' : ejemplo());
     return `<div class="ngas"><div class="hd"><b>${g.nombre}</b>${sacBox(g.cfg.i, g.cfg.sac, g.nombre)}</div>
       <label class="f"><span class="l">Botella</span><span class="r"><select data-bot="${g.cfg.i}" required aria-label="Botella de ${g.nombre}">${opts}</select></span></label>
       <div class="vals">

@@ -190,8 +190,9 @@ function renderDecoCore() {
     fondo: { o2: fo2, he: fhe }, deco: validos.map(g => ({ o2: g.o2, he: g.he || 0, sac: g.sac || 0 })), vDesc: vd, vAsc1: va, vAsc2: va, ppo2Deco: ppDeco, sacFondo: sacFondo || 0, sacDeco: 0 };
   const r = ENG.planDeco(base);
   if (r.error) return void (out.innerHTML = msg('bad', r.error));
-  const dm = (x) => Math.ceil(x.deco - 1e-9);
-  const deco = dm(r), total = Math.ceil(r.runtime - 1e-9);
+  const deco = Math.ceil(r.deco - 1e-9), total = Math.ceil(r.runtime - 1e-9);
+  // tiempo de ascenso (total − fondo): con más tiempo o más profundidad nunca baja
+  const asc = (x, tf) => Math.ceil(x.runtime - 1e-9) - tf;
 
   // gas necesario
   const fondoG = r.gases[0];
@@ -215,16 +216,17 @@ function renderDecoCore() {
   if (r.otu > 300) av.push(msg('warn', `${F(r.otu, 0)} OTU: por encima de 300, referencia para varios días seguidos.`));
   if (!av.length) av.push(msg('ok', 'Sin avisos: ppO₂, END, densidad, cambios de gas y toxicidad dentro de límites.'));
 
-  // sensibilidad
+  // sensibilidad: cambio del tiempo de ascenso
   const sens = [];
-  const run = (o) => { const x = ENG.planDeco({ ...base, ...o }); return x.error ? null : dm(x); };
+  const a0 = asc(r, t);
+  const run = (o) => { const x = ENG.planDeco({ ...base, ...o }); return x.error ? null : asc(x, o.tiempo ?? t); };
   const tp = run({ tiempo: t + 5 }), tm = t - 5 > d / vd ? run({ tiempo: t - 5 }) : null;
   const dp = run({ prof: d + 3 }), dmn = d - 3 > 0 ? run({ prof: d - 3 }) : null;
-  const sg = (x) => x == null ? '–' : `${x - deco >= 0 ? '+' : '−'}${Math.abs(x - deco)}' de deco`;
+  const sg = (x) => x == null ? '–' : `${x - a0 >= 0 ? '+' : '−'}${Math.abs(x - a0)}' de ascenso`;
   sens.push(row('+5 min', sg(tp)), row('−5 min', sg(tm)), row('+3 m', sg(dp)), row('−3 m', sg(dmn)));
   const rMin = (tp != null && tm != null) ? (tp - tm) / 10 : null;
   const rM = (dp != null && dmn != null) ? (dp - dmn) / 6 : null;
-  sens.push(row('Ratio por minuto de fondo', rMin == null ? '–' : `${F(rMin, 1)} min de deco`), row('Ratio por metro', rM == null ? '–' : `${F(rM, 1)} min de deco`));
+  sens.push(row('Ratio por minuto de fondo', rMin == null ? '–' : `${F(rMin, 1)} min de ascenso`), row('Ratio por metro', rM == null ? '–' : `${F(rM, 1)} min de ascenso`));
 
   const gasCorto = (n) => n === 'Oxígeno' ? 'O₂' : n.replace('Trimix ', '');
   const mt = (t) => { const s = Math.round(t * 60), m = Math.floor(s / 60), ss = s % 60; return m ? `${m}'` + (ss ? `${String(ss).padStart(2, '0')}"` : '') : `${ss}"`; };
@@ -250,9 +252,10 @@ function renderDecoCore() {
   }).join('');
 
   out.innerHTML = `<div class="res"><div class="duo">
-      <div><div class="k">Descompresión</div><div class="big">${deco} <small>min</small></div></div>
+      <div><div class="k">Descompresión</div><div class="big">${r.sinObligatorias ? '0' : deco} <small>min</small></div></div>
       <div><div class="k">Tiempo total</div><div class="big">${total} <small>min</small></div></div></div>
-      <div class="sub" style="margin-top:6px">Ascenso ${Math.ceil(r.ascenso - 1e-9)}', primera parada ${r.paradas.length ? r.paradas[0].prof + ' m' : '—'}, CNS ${F(r.cns, 0)} %, ${F(r.otu, 0)} OTU</div></div>
+      <div class="sub" style="margin-top:6px">Ascenso ${Math.ceil(r.ascenso - 1e-9)}', primera parada ${r.paradas.length && !r.sinObligatorias ? r.paradas[0].prof + ' m' : '—'}, CNS ${F(r.cns, 0)} %, ${F(r.otu, 0)} OTU</div></div>
+    ${r.sinObligatorias ? msg('ok', `Sin paradas obligatorias. Solo ${r.paradas.length > 1 ? 'cambios' : 'cambio'} de gas: ${r.paradas.map(x => `${x.prof} m (${gasCorto(x.gas)}, ${x.tiempo}')`).join(', ')}.`) : ''}
     ${r.paradas.length ? `<div class="card"><table class="stops"><thead><tr><th>Parada</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${stopsRows}</tbody></table></div>` : msg('ok', 'Sin paradas obligatorias.')}
     <h2 class="sec">Perfil de la inmersión</h2><div class="card chart" id="dc-chart"></div>
     <h2 class="sec">Runtime</h2><div class="card"><table class="stops rtt"><thead><tr><th>Tramo</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${logRows}</tbody></table></div>

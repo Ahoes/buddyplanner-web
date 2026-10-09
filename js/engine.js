@@ -253,6 +253,8 @@ const ENG = (() => {
       const siguiente = nivel === p.ultimaParada ? 0 : nivel - 3;
       const velSig = (siguiente > 0 ? siguiente >= primera : nivel > primera) ? p.vAsc1 : p.vAsc2;
       let g2 = 0, paro = false;
+      // ¿se podría seguir subiendo al llegar? (si es así y solo se para por el cambio de gas, no es parada obligatoria)
+      const libre = minimo > 0 && puedeSubir(nivel, siguiente, velSig, gas);
       if (minimo > 0 || !puedeSubir(nivel, siguiente, velSig, gas)) {
         paro = true;
         if (inicioDeco === null) inicioDeco = runtime;
@@ -265,7 +267,7 @@ const ENG = (() => {
       }
       if (paro) {
         const ini = paradas.length ? paradas[paradas.length - 1].rt : inicioDeco;
-        paradas.push({ prof: nivel, tiempo: Math.round(runtime - ini), gas: gas.nombre, rt: runtime });
+        paradas.push({ prof: nivel, tiempo: Math.round(runtime - ini), gas: gas.nombre, rt: runtime, soloCambio: libre && g2 === 0 });
       }
       if (g2 >= 2000) return { error: 'La descompresión no converge con estos datos.' };
       nivel -= 3;
@@ -292,8 +294,9 @@ const ENG = (() => {
 
     const ascenso = runtime - p.tiempo;
     const deco = paradas.length ? runtime - inicioDeco : 0;
+    const sinObligatorias = paradas.length > 0 && paradas.every((x) => x.soloCambio);
     return {
-      paradas, log, primera, deco, ascenso, runtime, cns, otu, psurf, barM, perfil,
+      paradas, log, primera, deco, ascenso, runtime, cns, otu, psurf, barM, perfil, sinObligatorias,
       gases: gases.map(g => ({ nombre: g.nombre, rol: g.rol, idx: g.idx, o2: g.o2, he: g.he, litros: g.litros, tiempo: g.tiempo, desde: g.desde })),
     };
   }

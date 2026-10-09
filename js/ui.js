@@ -162,7 +162,7 @@ function renderDeco() {
 }
 function renderDecoCore() {
   const out = $('dc-out');
-  const d = num('dc-d'), t = num('dc-t'), gfl = num('dc-gfl'), gfh = num('dc-gfh'), alt = num('dc-alt') ?? 0;
+  const d = num('dc-d'), t = num('dc-t'), gfl = num('dc-gfl'), gfh = num('dc-gfh'), alt = $('dc-alt').value === '' ? null : Number($('dc-alt').value);
   const fo2 = num('dc-fo2'), fhe = num('dc-fhe') ?? 0, vd = num('dc-vd'), va = num('dc-va');
   const ppMax = num('dc-ppf'), ppDeco = num('dc-ppd'), endMax = num('mz-end');
   const ppDecoOk = ppDeco != null && ppDeco >= 1 && ppDeco <= 1.7;
@@ -174,12 +174,11 @@ function renderDecoCore() {
     el.innerHTML = (g.o2 > 0 && g.o2 <= 100) ? `<b>${ENG.nombreGas(g.o2, g.he || 0)}</b>${ppDecoOk ? `MOD ${F((ppDeco / (g.o2 / 100) - 1) * 10, 0)} m` : ''}` : '<b>–</b>'; });
 
   if (d == null || t == null || d <= 0 || t <= 0) return void (out.innerHTML = msg('info', 'Introduce profundidad y tiempo de fondo.'));
-  const falta = [[gfl, 'GF bajo'], [gfh, 'GF alto'], [vd, 'velocidad de descenso'], [va, 'velocidad de ascenso'], [ppMax, 'ppO₂ máx. de fondo'], [ppDeco, 'ppO₂ máx. de deco'], [fo2, 'O₂ del gas de fondo'], [$('dc-mod').value || null, 'modelo'], [$('dc-sal').value || null, 'salinidad'], [$('dc-last').value || null, 'última parada']]
+  const falta = [[gfl, 'GF bajo'], [gfh, 'GF alto'], [vd, 'velocidad de descenso'], [va, 'velocidad de ascenso'], [ppMax, 'ppO₂ máx. de fondo'], [ppDeco, 'ppO₂ máx. de deco'], [fo2, 'O₂ del gas de fondo'], [$('dc-mod').value || null, 'modelo'], [$('dc-sal').value || null, 'tipo de agua'], [alt, 'altitud'], [$('dc-last').value || null, 'última parada']]
     .filter(([v]) => v == null).map(([, n]) => n);
   if (falta.length) return void (out.innerHTML = msg('info', `Completa: ${falta.join(', ')}.`));
   if (d > 150) return void (out.innerHTML = msg('bad', 'Profundidad fuera de rango (máximo 150 m).'));
   if (gfl == null || gfh == null || gfl <= 0 || gfh > 100 || gfl > gfh) return void (out.innerHTML = msg('bad', 'Revisa los GF: entre 1 y 100, y el bajo no puede ser mayor que el alto.'));
-  if (alt < 0 || alt > 4500) return void (out.innerHTML = msg('bad', 'Altitud fuera de rango (0 a 4.500 m).'));
   if (vd == null || va == null || vd < 3 || vd > 30 || va < 3 || va > 18) return void (out.innerHTML = msg('bad', 'Revisa las velocidades: descenso entre 3 y 30 m/min, ascenso entre 3 y 18 m/min.'));
   if (fo2 == null || fo2 <= 0 || fhe < 0 || fo2 + fhe > 100) return void (out.innerHTML = msg('bad', 'Revisa el gas de fondo: O₂ y He no pueden sumar más del 100 %.'));
   if (ppMax == null || ppMax < 0.5 || ppMax > 1.6) return void (out.innerHTML = msg('bad', 'Revisa la ppO₂ máxima de fondo: entre 0,5 y 1,6 bar.'));

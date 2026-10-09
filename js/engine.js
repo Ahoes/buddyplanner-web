@@ -95,6 +95,9 @@ const ENG = (() => {
     return 5;
   }
 
+  // densidad del agua (kg/m³), como Subsurface
+  const DENSIDAD_AGUA = { dulce: 1000, mar: 1030, en13319: 1020 };
+
   function nombreGas(o2, he) {
     if (o2 === 100) return 'Oxígeno';
     if (he > 0) return `Trimix ${o2}/${he}`;
@@ -104,8 +107,9 @@ const ENG = (() => {
 
   function planDeco(p) {
     // p: {prof, tiempo, gfLow, gfHigh, salinidad, altitud, ultimaParada, fondo:{o2,he}, deco:[{o2,he}], vDesc, vAsc1, vAsc2, ppo2Deco, sacFondo, sacDeco}
-    const psurf = 1.01325 * Math.pow(1 - 2.25577e-5 * p.altitud, 5.25588);
-    const barM = (p.salinidad === 'dulce' ? 1000 : 1030) * 9.80665 / 1e5;
+    // presión en superficie con la altitud como Subsurface (escala de 7.800 m)
+    const psurf = 1.01325 * Math.exp(-p.altitud / 7800);
+    const barM = (DENSIDAD_AGUA[p.salinidad] || 1030) * 9.80665 / 1e5;
     const P = (d) => psurf + d * barM;
     const ataConv = (d) => 1 + d / 10; // convención del buceador para cambios de gas
 

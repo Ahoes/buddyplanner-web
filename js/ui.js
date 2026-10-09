@@ -119,7 +119,7 @@ function renderMI() {
 
 // --- Deco ---
 let decoGases = []; // sin gases de deco por defecto
-let sacFondo = null; // SAC vacío hasta que el usuario lo escriba
+let sacFondo = 20; // SAC del gas de fondo: 20 por defecto; se copia el de Consumo cuando se escribe allí
 function buildDecoGases() {
   $('dc-gases').innerHTML = decoGases.map((g, i) => `<div class="gasrow">
     <label class="f"><span class="l">O₂</span><span class="r"><input data-g="${i}" data-k="o2" inputmode="decimal" value="${g.o2}"><span class="u">%</span></span></label>
@@ -129,7 +129,7 @@ function buildDecoGases() {
 }
 document.addEventListener('click', e => {
   const a = e.target.closest('[data-add]');
-  if (a) { if (decoGases.length >= 4) return; const o2 = Number(a.dataset.add); decoGases.push({ o2, he: 0, bot: null, sac: null }); buildDecoGases(); renderDeco(); return; }
+  if (a) { if (decoGases.length >= 4) return; const o2 = Number(a.dataset.add); decoGases.push({ o2, he: 0, bot: null, sac: 16 }); /* SAC de deco: 16 por defecto */ buildDecoGases(); renderDeco(); return; }
   const d = e.target.closest('[data-del]');
   if (d) { decoGases.splice(Number(d.dataset.del), 1); buildDecoGases(); renderDeco(); return; }
 });
@@ -346,6 +346,15 @@ window.addEventListener('resize', () => { const b = $('dc-chart'); if (b && b.cl
 // Deco toma profundidad y tiempo de Consumo (tiempo redondeado abajo); sin cálculo de consumo, 0 m y 0 min.
 // Solo se copian cuando cambia el resultado de Consumo, así se respeta lo que el usuario escriba en Deco.
 let csCopiado = null;
+// El SAC de Consumo pasa al SAC del gas de fondo en Deco, solo cuando cambia en Consumo
+// (así se respeta lo que el usuario escriba en Deco).
+let sacCopiado = null;
+function copiarSacADeco() {
+  const v = num('cs-sac');
+  if (v == null || !(v > 0) || v === sacCopiado) return;
+  sacCopiado = v; sacFondo = v;
+}
+
 function copiarConsumoADeco() {
   const v = CS ? { d: Fn(CS.d), t: String(Math.floor(CS.tiempo + 1e-9)) } : { d: '', t: '' };
   const clave = `${v.d}/${v.t}`;
@@ -402,6 +411,6 @@ function renderGB() {
 
 
 
-function renderAll() { renderGM(); renderCS(); copiarConsumoADeco(); renderMZ(); renderMI(); renderDeco(); renderGB(); }
+function renderAll() { renderGM(); renderCS(); copiarConsumoADeco(); copiarSacADeco(); renderMZ(); renderMI(); renderDeco(); renderGB(); }
 buildDecoGases();
 renderAll();

@@ -83,6 +83,19 @@ function dibujarPlanImagen(plan) {
       }
     }
     y += 26;
+    // sensibilidad (dos columnas: tiempo a la izquierda, profundidad a la derecha)
+    if (plan.sens && plan.sens.length) {
+      T('Sensibilidad', M, y + 13, 600, 13, c.tx); y += 22;
+      const filas = Math.ceil(plan.sens.length / 2), alto = 14 + filas * 22;
+      if (dibuja) caja(M, y, AN, alto);
+      const cw = (AN - 8) / 2;
+      plan.sens.forEach(([k, v], i) => {
+        const x = M + (i % 2) * (cw + 8), yy = y + 26 + Math.floor(i / 2) * 22;
+        T(k, x + 10, yy, 400, 12.5, c.tx2);
+        T(v, x + cw - 8, yy, 600, 12.5, c.tx, 'right');
+      });
+      y += alto + 18;
+    }
     // gas necesario
     T('Gas necesario', M, y + 13, 600, 13, c.tx); y += 22;
     const gw = (AN - 8) / 2;

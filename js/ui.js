@@ -279,6 +279,8 @@ function renderDecoCore() {
         const b = g.cfg.bot ? Math.ceil(g.litros / g.cfg.bot - 1e-9) : null, be = g.cfg.bot ? Math.ceil(g.litros * 1.5 / g.cfg.bot - 1e-9) : null;
         return { titulo: tit, lineas: [`${F(g.litros, 0)} L${b != null ? ` · ${b} bar` : ''} · SAC ${Fn(g.cfg.sac)}`].concat(be != null ? [`Emergencia +50 %: ${be} bar`] : []) };
       })),
+    sens: [['+5 min', sg(tp)], ['+3 m', sg(dp)], ['−5 min', sg(tm)], ['−3 m', sg(dmn)],
+      ['Ratio por minuto', rMin == null ? '–' : `${F(rMin, 1)}' de deco`], ['Ratio por metro', rM == null ? '–' : `${F(rM, 1)}' de deco`]],
     nombreArchivo: `${Fn(d)}m-${t}min`.replace(',', '_'),
   };
 

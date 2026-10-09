@@ -8,7 +8,7 @@ const Fa = (x) => { let s = F(x, 2); if (s.endsWith('0')) s = s.slice(0, -1); re
 const row = (k, v) => `<div class="row"><span>${k}</span><b>${v}</b></div>`;
 const msg = (c, t) => `<div class="msg ${c}">${t}</div>`;
 
-const BIB = [[20, '2x10 L'], [24, '2x12 L'], [30, '2x15 L'], [36, '2x18 L'], [10, '10 L'], [12, '12 L'], [15, '15 L'], [18, '18 L']]; // bibotellas y monobotellas
+const BIB = [[10, '10 L'], [12, '12 L'], [15, '15 L'], [18, '18 L'], [20, '2x10 L'], [24, '2x12 L'], [30, '2x15 L'], [36, '2x18 L']]; // de menor a mayor volumen
 const DECO_BOT = [[5.7, 'S40 (5,7 L)'], [6, '6 L'], [7, '7 L'], [11.1, 'S80 (11,1 L)']];
 // desplegables sin elegir: muestran en gris un ejemplo (opción vacía oculta)
 const ejemplo = (t) => `<option value="" disabled selected hidden>${t}</option>`;

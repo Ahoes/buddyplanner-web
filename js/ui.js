@@ -171,6 +171,7 @@ function renderDecoCore() {
   const ppDecoOk = ppDeco != null && ppDeco >= 1 && ppDeco <= 1.7;
   // cambio de gas: a la primera parada (múltiplo de 3 m) donde la ppO₂ no pasa del máximo de deco
   const cambio = (o2) => Math.floor((ppDeco / (o2 / 100) - 1) * 10 / 3 + 1e-9) * 3;
+  $('dc-gh').hidden = !decoGases.length; // la nota solo tiene sentido con gases de deco
   $('dc-gh').textContent = ppDecoOk ? `Gases de deco: se cambia a ppO₂ ${Fa(ppDeco)} (EAN50 a ${cambio(50)} m, oxígeno a ${cambio(100)} m) y cada cambio suma 1 minuto.` : 'Gases de deco: cada cambio suma 1 minuto.';
   // nombres de gases de deco
   decoGases.forEach((g, i) => { const el = $('dc-gn-' + i); if (!el) return;
@@ -258,7 +259,7 @@ function renderDecoCore() {
   out.innerHTML = `<div class="res"><div class="duo">
       <div><div class="k">Descompresión</div><div class="big">${deco} <small>min</small></div></div>
       <div><div class="k">Tiempo total</div><div class="big">${total} <small>min</small></div></div></div>
-      <div class="sub" style="margin-top:6px">Ascenso ${Math.ceil(r.ascenso - 1e-9)}', primera parada ${obligatorias.length ? obligatorias[0].prof + ' m' : '—'}, CNS ${F(r.cns, 0)} %, ${F(r.otu, 0)} OTU</div></div>
+      <div class="sub" style="margin-top:6px">CNS ${F(r.cns, 0)} % · ${F(r.otu, 0)} OTU</div></div>
     ${obligatorias.length ? `<div class="card"><table class="stops"><thead><tr><th>Parada</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${stopsRows}</tbody></table></div>` : msg('ok', r.ascensoDirecto ? 'Sin paradas obligatorias: ascenso directo a superficie con el gas de fondo, sin cambios de gas.' : r.paradas.length ? 'Sin paradas obligatorias. El cambio de gas está en el runtime.' : 'Sin paradas obligatorias.')}
     <h2 class="sec">Perfil de la inmersión</h2><div class="card chart" id="dc-chart"></div>
     <h2 class="sec">Runtime</h2><div class="card"><table class="stops rtt"><thead><tr><th>Tramo</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${logRows}</tbody></table></div>

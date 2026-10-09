@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MyBuddyPlanner (Beta v0.1.28)</title>
+<title>MyBuddyPlanner (Beta v0.1.29)</title>
 <meta name="theme-color" content="#0b1216">
 <meta name="description" content="Planificador de buceo técnico: gas mínimo, consumo, mezclas y descompresión.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -21,7 +21,7 @@
 <body>
 <div class="app">
 <header class="top">
-  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.28</span></div>
+  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.29</span></div>
     <button id="instalar" class="inst" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Instalar</button></div>
   <nav class="tabs" role="tablist">
     <button role="tab" data-t="gm" aria-selected="true">Gas mín.</button>
@@ -99,8 +99,8 @@
   </div>
   <p class="hint">La profundidad y el tiempo llegan de la pestaña Consumo (tiempo redondeado hacia abajo al minuto); puedes cambiarlos. El tiempo de fondo incluye el descenso.</p>
   <div class="grid2">
-    <label class="f"><span class="l">Velocidad de descenso</span><span class="r"><input id="dc-vd" inputmode="decimal" value=""><span class="u">m/min</span></span></label>
-    <label class="f"><span class="l">Velocidad de ascenso</span><span class="r"><input id="dc-va" inputmode="decimal" value=""><span class="u">m/min</span></span></label>
+    <label class="f"><span class="l">Velocidad de descenso</span><span class="r"><input id="dc-vd" inputmode="decimal" value="20"><span class="u">m/min</span></span></label>
+    <label class="f"><span class="l">Velocidad de ascenso</span><span class="r"><input id="dc-va" inputmode="decimal" value="9"><span class="u">m/min</span></span></label>
   </div>
   <label class="f"><span class="l">Última parada</span><span class="r"><select id="dc-last" required><option value="6">6 m</option><option value="3">3 m</option><option value="" disabled selected hidden></option></select></span></label>
 
@@ -118,7 +118,6 @@
   <div id="dc-gases"></div>
   <div class="chips" aria-label="Añadir gas de deco">
     <button class="chip" data-add="50">+ EAN50</button>
-    <button class="chip" data-add="80">+ EAN80</button>
     <button class="chip" data-add="100">+ Oxígeno</button>
     <button class="chip" data-add="32">+ Otro</button>
   </div>

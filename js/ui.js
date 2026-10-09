@@ -266,7 +266,10 @@ function renderDecoCore() {
   PLAN_DECO = {
     fecha: hoy.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }).replace('.', ''),
     version: ($('version') ? $('version').textContent : '').replace('Beta ', ''),
-    datos: `${Fn(d)} m · ${t}' · ${fondoG.nombre}${nombresDeco ? ' + ' + nombresDeco : ''} · Bühlmann ${MODELO[base.modelo]} · GF ${Fn(gfl)}/${Fn(gfh)} · ${AGUA[base.salinidad]}${alt ? ` · altitud ${F(alt, 0)} m` : ''} · última parada ${base.ultimaParada} m · descenso ${Fn(vd)} y ascenso ${Fn(va)} m/min`,
+    // cada dato empieza en mayúscula
+    datos: [`${Fn(d)} m`, `${t}'`, `${fondoG.nombre}${nombresDeco ? ' + ' + nombresDeco : ''}`, `Bühlmann ${MODELO[base.modelo]}`, `GF ${Fn(gfl)}/${Fn(gfh)}`,
+      AGUA[base.salinidad], alt ? `Altitud ${F(alt, 0)} m` : '', `Última parada ${base.ultimaParada} m`, `Descenso ${Fn(vd)} m/min`, `Ascenso ${Fn(va)} m/min`]
+      .filter(Boolean).map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(' · '),
     deco, total, cnsOtu: `CNS ${F(r.cns, 0)} % · ${F(r.otu, 0)} OTU`, gf: `${Fn(gfl)}/${Fn(gfh)}`, perfil: r.perfil,
     paradas: obligatorias.map(x => ({ prof: `${x.prof} m`, tiempo: `${x.tiempo}'`, gas: gasCorto(x.gas), rt: `${Math.ceil(x.rt - 1e-9)}'` })),
     sinParadas: r.ascensoDirecto ? 'Sin paradas obligatorias: ascenso directo a superficie.' : 'Sin paradas obligatorias.',

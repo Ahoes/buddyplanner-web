@@ -236,6 +236,7 @@ const ENG = (() => {
     };
 
     const paradas = [];
+    const cambios = []; // runtime al terminar cada minuto de cambio de gas
     let inicioDeco = null;
     let gas = fondo, cur = p.prof;
     let nivel = Math.floor((p.prof - 0.001) / 3) * 3;
@@ -252,22 +253,21 @@ const ENG = (() => {
       }
       const siguiente = nivel === p.ultimaParada ? 0 : nivel - 3;
       const velSig = (siguiente > 0 ? siguiente >= primera : nivel > primera) ? p.vAsc1 : p.vAsc2;
-      let g2 = 0, paro = false;
-      // ¿se podría seguir subiendo al llegar? (si es así y solo se para por el cambio de gas, no es parada obligatoria)
-      const libre = minimo > 0 && puedeSubir(nivel, siguiente, velSig, gas);
-      if (minimo > 0 || !puedeSubir(nivel, siguiente, velSig, gas)) {
-        paro = true;
-        if (inicioDeco === null) inicioDeco = runtime;
-        const ref = paradas.length ? paradas[paradas.length - 1].rt : runtime;
-        // completar hasta el minuto entero (el traslado entra en la parada)
-        if (minimo > 0) segmento(nivel, nivel, 1, gas, 'cambio'); // minuto de cambio de gas, siempre
+      let g2 = 0;
+      // cambio de gas: siempre 1 minuto exacto, y no cuenta como descompresión
+      if (minimo > 0) { segmento(nivel, nivel, 1, gas, 'cambio'); cambios.push(runtime); }
+      if (!puedeSubir(nivel, siguiente, velSig, gas)) {
+        // parada obligatoria: termina en minuto entero de runtime (el traslado entra en la parada)
+        const llegada = minimo > 0 ? runtime - 1 : runtime;
+        if (inicioDeco === null) inicioDeco = llegada;
         const frac = Math.ceil(runtime - 1e-6) - runtime;
         if (frac > 1e-6) segmento(nivel, nivel, frac, gas, 'parada');
         while (!puedeSubir(nivel, siguiente, velSig, gas) && g2++ < 2000) segmento(nivel, nivel, 1, gas, 'parada');
-      }
-      if (paro) {
         const ini = paradas.length ? paradas[paradas.length - 1].rt : inicioDeco;
-        paradas.push({ prof: nivel, tiempo: Math.round(runtime - ini), gas: gas.nombre, rt: runtime, soloCambio: libre && g2 === 0 });
+        paradas.push({ prof: nivel, tiempo: Math.round(runtime - ini), gas: gas.nombre, rt: runtime });
+      } else if (minimo > 0) {
+        // solo el minuto de cambio de gas (no es parada obligatoria)
+        paradas.push({ prof: nivel, tiempo: 1, gas: gas.nombre, rt: runtime, soloCambio: true });
       }
       if (g2 >= 2000) return { error: 'La descompresión no converge con estos datos.' };
       nivel -= 3;
@@ -293,7 +293,8 @@ const ENG = (() => {
     });
 
     const ascenso = runtime - p.tiempo;
-    const deco = paradas.length ? runtime - inicioDeco : 0;
+    // descompresión: desde la llegada a la primera parada obligatoria hasta superficie, sin los minutos de cambio de gas
+    const deco = inicioDeco === null ? 0 : runtime - inicioDeco - cambios.filter((fin) => fin > inicioDeco + 1e-9).length;
     const sinObligatorias = paradas.length > 0 && paradas.every((x) => x.soloCambio);
     return {
       paradas, log, primera, deco, ascenso, runtime, cns, otu, psurf, barM, perfil, sinObligatorias,

@@ -151,6 +151,9 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.dataset && t.dataset.bot !== undefined) { decoGases[Number(t.dataset.bot)].bot = Number(t.value); renderDeco(); return; }
+  if (t.dataset && t.dataset.bibfondo !== undefined) { // botella del gas de espalda (Deco): se comparte con las demás pestañas
+    bib = Number(t.value); document.querySelectorAll('select.bib').forEach(o => { o.value = String(bib); }); renderAll(); return;
+  }
   if (t.tagName === 'SELECT' && !t.classList.contains('bib')) renderAll();
 });
 
@@ -190,9 +193,9 @@ function renderDecoCore() {
     fondo: { o2: fo2, he: fhe }, deco: validos.map(g => ({ o2: g.o2, he: g.he || 0, sac: g.sac || 0 })), vDesc: vd, vAsc1: va, vAsc2: va, ppo2Deco: ppDeco, sacFondo: sacFondo || 0, sacDeco: 0 };
   const r = ENG.planDeco(base);
   if (r.error) return void (out.innerHTML = msg('bad', r.error));
-  const deco = Math.ceil(r.deco - 1e-9), total = Math.ceil(r.runtime - 1e-9);
-  // tiempo de ascenso (total − fondo): con más tiempo o más profundidad nunca baja
-  const asc = (x, tf) => Math.ceil(x.runtime - 1e-9) - tf;
+  // descompresión mostrada: 0 si la única parada es el cambio de gas
+  const dm = (x) => x.sinObligatorias ? 0 : Math.ceil(x.deco - 1e-9);
+  const deco = dm(r), total = Math.ceil(r.runtime - 1e-9);
 
   // gas necesario
   const fondoG = r.gases[0];
@@ -216,23 +219,24 @@ function renderDecoCore() {
   if (r.otu > 300) av.push(msg('warn', `${F(r.otu, 0)} OTU: por encima de 300, referencia para varios días seguidos.`));
   if (!av.length) av.push(msg('ok', 'Sin avisos: ppO₂, END, densidad, cambios de gas y toxicidad dentro de límites.'));
 
-  // sensibilidad: cambio del tiempo de ascenso
+  // sensibilidad: cambio de la descompresión
   const sens = [];
-  const a0 = asc(r, t);
-  const run = (o) => { const x = ENG.planDeco({ ...base, ...o }); return x.error ? null : asc(x, o.tiempo ?? t); };
+  const run = (o) => { const x = ENG.planDeco({ ...base, ...o }); return x.error ? null : dm(x); };
   const tp = run({ tiempo: t + 5 }), tm = t - 5 > d / vd ? run({ tiempo: t - 5 }) : null;
   const dp = run({ prof: d + 3 }), dmn = d - 3 > 0 ? run({ prof: d - 3 }) : null;
-  const sg = (x) => x == null ? '–' : `${x - a0 >= 0 ? '+' : '−'}${Math.abs(x - a0)}' de ascenso`;
+  const sg = (x) => x == null ? '–' : `${x - deco >= 0 ? '+' : '−'}${Math.abs(x - deco)}' de deco`;
   sens.push(row('+5 min', sg(tp)), row('−5 min', sg(tm)), row('+3 m', sg(dp)), row('−3 m', sg(dmn)));
   const rMin = (tp != null && tm != null) ? (tp - tm) / 10 : null;
   const rM = (dp != null && dmn != null) ? (dp - dmn) / 6 : null;
-  sens.push(row('Ratio por minuto de fondo', rMin == null ? '–' : `${F(rMin, 1)} min de ascenso`), row('Ratio por metro', rM == null ? '–' : `${F(rM, 1)} min de ascenso`));
+  sens.push(row('Ratio por minuto de fondo', rMin == null ? '–' : `${F(rMin, 1)} min de deco`), row('Ratio por metro', rM == null ? '–' : `${F(rM, 1)} min de deco`));
 
   const gasCorto = (n) => n === 'Oxígeno' ? 'O₂' : n.replace('Trimix ', '');
   const mt = (t) => { const s = Math.round(t * 60), m = Math.floor(s / 60), ss = s % 60; return m ? `${m}'` + (ss ? `${String(ss).padStart(2, '0')}"` : '') : `${ss}"`; };
   const TIPO = { descenso: 'Descenso', fondo: 'Fondo', ascenso: 'Ascenso', cambio: 'Cambio de gas', parada: 'Parada' };
+  // paradas obligatorias: el minuto de cambio de gas va únicamente en el runtime
+  const obligatorias = r.paradas.filter(x => !x.soloCambio);
   const logRows = r.log.map(l => `<tr${l.tipo === 'cambio' ? ' class="sw"' : ''}><td>${TIPO[l.tipo]} ${l.d0 === l.d1 ? l.d0 + ' m' : Fn(l.d0) + '→' + Fn(l.d1) + ' m'}</td><td>${mt(l.t)}</td><td>${gasCorto(l.gas)}</td><td>${mt(l.fin)}</td></tr>`).join('');
-  const stopsRows = r.paradas.map(s => `<tr><td>${s.prof} m</td><td>${s.tiempo}'</td><td>${gasCorto(s.gas)}</td><td>${Math.ceil(s.rt - 1e-9)}'</td></tr>`).join('');
+  const stopsRows = obligatorias.map(s => `<tr><td>${s.prof} m</td><td>${s.tiempo}'</td><td>${gasCorto(s.gas)}</td><td>${Math.ceil(s.rt - 1e-9)}'</td></tr>`).join('');
   const fondoBar = bib ? Math.ceil(fondoG.litros / bib - 1e-9) : null;
   const sacBox = (key, val, gas) => `<label class="sacbox">SAC <input id="sac-${key}" data-sac="${key}" inputmode="decimal" value="${val == null ? '' : Fn(val)}" aria-label="SAC de ${gas}"> L/min</label>`;
   const sinSac = '<p class="hint" style="margin:6px 0 0">Escribe tu SAC para calcular el gas.</p>';
@@ -252,17 +256,17 @@ function renderDecoCore() {
   }).join('');
 
   out.innerHTML = `<div class="res"><div class="duo">
-      <div><div class="k">Descompresión</div><div class="big">${r.sinObligatorias ? '0' : deco} <small>min</small></div></div>
+      <div><div class="k">Descompresión</div><div class="big">${deco} <small>min</small></div></div>
       <div><div class="k">Tiempo total</div><div class="big">${total} <small>min</small></div></div></div>
-      <div class="sub" style="margin-top:6px">Ascenso ${Math.ceil(r.ascenso - 1e-9)}', primera parada ${r.paradas.length && !r.sinObligatorias ? r.paradas[0].prof + ' m' : '—'}, CNS ${F(r.cns, 0)} %, ${F(r.otu, 0)} OTU</div></div>
-    ${r.sinObligatorias ? msg('ok', `Sin paradas obligatorias. Solo ${r.paradas.length > 1 ? 'cambios' : 'cambio'} de gas: ${r.paradas.map(x => `${x.prof} m (${gasCorto(x.gas)}, ${x.tiempo}')`).join(', ')}.`) : ''}
-    ${r.paradas.length ? `<div class="card"><table class="stops"><thead><tr><th>Parada</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${stopsRows}</tbody></table></div>` : msg('ok', 'Sin paradas obligatorias.')}
+      <div class="sub" style="margin-top:6px">Ascenso ${Math.ceil(r.ascenso - 1e-9)}', primera parada ${obligatorias.length ? obligatorias[0].prof + ' m' : '—'}, CNS ${F(r.cns, 0)} %, ${F(r.otu, 0)} OTU</div></div>
+    ${obligatorias.length ? `<div class="card"><table class="stops"><thead><tr><th>Parada</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${stopsRows}</tbody></table></div>` : msg('ok', r.paradas.length ? 'Sin paradas obligatorias. El cambio de gas está en el runtime.' : 'Sin paradas obligatorias.')}
     <h2 class="sec">Perfil de la inmersión</h2><div class="card chart" id="dc-chart"></div>
     <h2 class="sec">Runtime</h2><div class="card"><table class="stops rtt"><thead><tr><th>Tramo</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${logRows}</tbody></table></div>
     <h2 class="sec">Avisos</h2>${av.join('')}
     <h2 class="sec">Sensibilidad</h2><div class="card">${sens.join('')}</div>
     <h2 class="sec">Gas necesario para la inmersión</h2>
     <div class="ngas"><div class="hd"><b>Gas de espalda · ${fondoG.nombre}</b>${sacBox('f', sacFondo, 'gas de espalda')}</div>
+      <label class="f"><span class="l">Botella</span><span class="r"><select id="dc-bib" class="bib" data-bibfondo required aria-label="Botella del gas de espalda">${BIB.map(([v, l]) => `<option value="${v}"${v === bib ? ' selected' : ''}>${l}</option>`).join('')}${bib ? '' : ejemplo()}</select></span></label>
       <div class="vals"><div class="val"><div class="l">Litros</div><div class="n">${sacFondo ? F(fondoG.litros, 0) : '–'}</div></div>
       <div class="val"><div class="l">Bares${bib ? ` (${bibName()})` : ''}</div><div class="n">${sacFondo && bib ? fondoBar : '–'}</div></div></div>${!sacFondo ? sinSac : !bib ? '<p class="hint" style="margin:6px 0 0">Elige la botella para ver los bares.</p>' : ''}</div>
     ${decoCards}`;

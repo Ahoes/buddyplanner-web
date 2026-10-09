@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MyBuddyPlanner (Beta v0.1.26)</title>
+<title>MyBuddyPlanner (Beta v0.1.27)</title>
 <meta name="theme-color" content="#0b1216">
 <meta name="description" content="Planificador de buceo técnico: gas mínimo, consumo, mezclas y descompresión.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -21,7 +21,7 @@
 <body>
 <div class="app">
 <header class="top">
-  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.26</span></div>
+  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.27</span></div>
     <button id="instalar" class="inst" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Instalar</button></div>
   <nav class="tabs" role="tablist">
     <button role="tab" data-t="gm" aria-selected="true">Gas mín.</button>
@@ -110,10 +110,9 @@
     <label class="f"><span class="l">ppO₂ máx. de deco</span><span class="r"><input id="dc-ppd" inputmode="decimal" value=""><span class="u">bar</span></span></label>
   </div>
   <p class="hint" style="margin-top:4px">Gas de fondo</p>
-  <div class="grid3">
+  <div class="grid2">
     <label class="f"><span class="l">O₂</span><span class="r"><input id="dc-fo2" inputmode="decimal" value=""><span class="u">%</span></span></label>
     <label class="f"><span class="l">He</span><span class="r"><input id="dc-fhe" inputmode="decimal" value=""><span class="u">%</span></span></label>
-    <label class="f"><span class="l">Botella</span><span class="r"><select id="dc-bib" class="bib"></select></span></label>
   </div>
   <p class="hint" id="dc-gh"></p>
   <div id="dc-gases"></div>

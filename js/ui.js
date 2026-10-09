@@ -163,8 +163,10 @@ function renderDeco() {
   renderDecoCore();
   if (actId) { const el = $(actId); if (el) { el.focus(); try { el.setSelectionRange(selS, selE); } catch (e) {} } }
 }
+let PLAN_DECO = null; // último plan calculado, para compartirlo como imagen (js/compartir.js)
 function renderDecoCore() {
   const out = $('dc-out');
+  PLAN_DECO = null;
   const d = num('dc-d'), t = num('dc-t'), gfl = num('dc-gfl'), gfh = num('dc-gfh'), alt = $('dc-alt').value === '' ? null : Number($('dc-alt').value);
   const fo2 = num('dc-fo2'), fhe = num('dc-fhe') ?? 0, vd = num('dc-vd'), va = num('dc-va');
   const ppMax = num('dc-ppf'), ppDeco = num('dc-ppd'), endMax = num('mz-end');
@@ -256,6 +258,30 @@ function renderDecoCore() {
       ${!conSac ? sinSac : !conBot ? '<p class="hint" style="margin:6px 0 0">Elige la botella para ver los bares.</p>' : g.tiempo > 0 ? `<div class="emer${be > 200 ? ' over' : ''}"><span>Emergencia +50 %</span><span>${F(Le, 0)} L · ${be} bar</span></div>` : ''}</div>`;
   }).join('');
 
+  // datos para la imagen que se comparte
+  const MODELO = { A: 'ZHL-16A', B: 'ZHL-16B', C: 'ZHL-16C' }, AGUA = { mar: 'agua de mar', dulce: 'agua dulce', en13319: 'agua EN13319' };
+  const nombresDeco = decoG.map(g => g.nombre).join(' + ');
+  const botNombre = (v) => { const x = DECO_BOT.find(b => b[0] === v); return x ? x[1].replace(/ \(.*\)/, '') : ''; };
+  const hoy = new Date();
+  PLAN_DECO = {
+    fecha: hoy.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }).replace('.', ''),
+    version: ($('version') ? $('version').textContent : '').replace('Beta ', ''),
+    datos: `${Fn(d)} m · ${t}' · ${fondoG.nombre}${nombresDeco ? ' + ' + nombresDeco : ''} · Bühlmann ${MODELO[base.modelo]} · GF ${Fn(gfl)}/${Fn(gfh)} · ${AGUA[base.salinidad]}${alt ? ` · altitud ${F(alt, 0)} m` : ''} · última parada ${base.ultimaParada} m · descenso ${Fn(vd)} y ascenso ${Fn(va)} m/min`,
+    deco, total, cnsOtu: `CNS ${F(r.cns, 0)} % · ${F(r.otu, 0)} OTU`, gf: `${Fn(gfl)}/${Fn(gfh)}`, perfil: r.perfil,
+    paradas: obligatorias.map(x => ({ prof: `${x.prof} m`, tiempo: `${x.tiempo}'`, gas: gasCorto(x.gas), rt: `${Math.ceil(x.rt - 1e-9)}'` })),
+    sinParadas: r.ascensoDirecto ? 'Sin paradas obligatorias: ascenso directo a superficie.' : 'Sin paradas obligatorias.',
+    cambios: r.log.filter(l => l.tipo === 'cambio').map(l => `↻ Cambio a ${gasCorto(l.gas)} a ${l.d0} m · 1' (runtime ${mt(l.fin)})`),
+    gases: [{ titulo: `Fondo · ${gasCorto(fondoG.nombre)}`, lineas: sacFondo ? [`${F(fondoG.litros, 0)} L${bib ? ` · ${fondoBar} bar (${bibName()})` : ''}`, `SAC ${Fn(sacFondo)}`] : ['Sin SAC'] }]
+      .concat(decoG.map(g => {
+        const tit = `${g.nombre}${g.cfg.bot ? ' · ' + botNombre(g.cfg.bot) : ''}`;
+        if (g.tiempo <= 0) return { titulo: tit, lineas: ['No se usa'] };
+        if (!g.cfg.sac) return { titulo: tit, lineas: ['Sin SAC'] };
+        const b = g.cfg.bot ? Math.ceil(g.litros / g.cfg.bot - 1e-9) : null, be = g.cfg.bot ? Math.ceil(g.litros * 1.5 / g.cfg.bot - 1e-9) : null;
+        return { titulo: tit, lineas: [`${F(g.litros, 0)} L${b != null ? ` · ${b} bar` : ''} · SAC ${Fn(g.cfg.sac)}`].concat(be != null ? [`Emergencia +50 %: ${be} bar`] : []) };
+      })),
+    nombreArchivo: `${Fn(d)}m-${t}min`.replace(',', '_'),
+  };
+
   out.innerHTML = `<div class="res"><div class="duo">
       <div><div class="k">Descompresión</div><div class="big">${deco} <small>min</small></div></div>
       <div><div class="k">Tiempo total</div><div class="big">${total} <small>min</small></div></div></div>
@@ -270,7 +296,8 @@ function renderDecoCore() {
       <label class="f"><span class="l">Botella</span><span class="r"><select id="dc-bib" class="bib" data-bibfondo required aria-label="Botella del gas de espalda">${BIB.map(([v, l]) => `<option value="${v}"${v === bib ? ' selected' : ''}>${l}</option>`).join('')}${bib ? '' : ejemplo()}</select></span></label>
       <div class="vals"><div class="val"><div class="l">Litros</div><div class="n">${sacFondo ? F(fondoG.litros, 0) : '–'}</div></div>
       <div class="val"><div class="l">Bares${bib ? ` (${bibName()})` : ''}</div><div class="n">${sacFondo && bib ? fondoBar : '–'}</div></div></div>${!sacFondo ? sinSac : !bib ? '<p class="hint" style="margin:6px 0 0">Elige la botella para ver los bares.</p>' : ''}</div>
-    ${decoCards}`;
+    ${decoCards}
+    <button class="btn" id="dc-compartir">Compartir imagen del plan</button>`;
   GRAF = { perfil: r.perfil, gf: `${Fn(gfl)}/${Fn(gfh)}` };
   dibujarPerfil();
 }

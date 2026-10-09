@@ -1,8 +1,8 @@
 // MyBuddyPlanner: funcionamiento sin conexión.
 // Al publicar una versión nueva, ejecuta npm run version (sube el número aquí, en index.html y en package.json).
-const VERSION = 'mybuddyplanner-v0.1.30';
+const VERSION = 'mybuddyplanner-v0.1.31';
 const ARCHIVOS = ['./', './index.html', './manifest.webmanifest',
-  './css/styles.css', './js/engine.js', './js/ui.js', './js/pwa.js',
+  './css/styles.css', './js/engine.js', './js/ui.js', './js/compartir.js', './js/pwa.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

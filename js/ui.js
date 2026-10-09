@@ -16,7 +16,7 @@ let bib = null; // hasta que el usuario elija botella
 const bibName = () => bib ? BIB.find(b => b[0] === bib)[1] : '';
 document.querySelectorAll('select.bib').forEach(s => {
   s.required = true;
-  s.innerHTML = ejemplo('2x12 L') + BIB.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+  s.innerHTML = BIB.map(([v, l]) => `<option value="${v}">${l}</option>`).join('') + ejemplo('2x12 L'); // el ejemplo al final: algunos móviles lo muestran en la lista
   s.addEventListener('change', e => { bib = Number(e.target.value); document.querySelectorAll('select.bib').forEach(o => o.value = String(bib)); renderAll(); });
 });
 
@@ -239,7 +239,7 @@ function renderDecoCore() {
   const decoCards = decoG.map(g => {
     const L = g.litros, Le = L * 1.5, b = Math.ceil(L / g.cfg.bot - 1e-9), be = Math.ceil(Le / g.cfg.bot - 1e-9);
     const conSac = !!g.cfg.sac, conBot = !!g.cfg.bot;
-    const opts = (conBot ? '' : ejemplo(g.o2 === 100 ? 'S40 (5,7 L)' : 'S80 (11,1 L)')) + DECO_BOT.map(([v, l]) => `<option value="${v}"${v === g.cfg.bot ? ' selected' : ''}>${l}</option>`).join('');
+    const opts = DECO_BOT.map(([v, l]) => `<option value="${v}"${v === g.cfg.bot ? ' selected' : ''}>${l}</option>`).join('') + (conBot ? '' : ejemplo(g.o2 === 100 ? 'S40 (5,7 L)' : 'S80 (11,1 L)'));
     return `<div class="ngas"><div class="hd"><b>${g.nombre}</b>${sacBox(g.cfg.i, g.cfg.sac, g.nombre)}</div>
       <label class="f"><span class="l">Botella</span><span class="r"><select data-bot="${g.cfg.i}" required aria-label="Botella de ${g.nombre}">${opts}</select></span></label>
       <div class="vals">

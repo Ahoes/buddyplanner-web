@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MyBuddyPlanner (Beta v0.1.22)</title>
+<title>MyBuddyPlanner (Beta v0.1.23)</title>
 <meta name="theme-color" content="#0b1216">
 <meta name="description" content="Planificador de buceo técnico: gas mínimo, consumo, mezclas y descompresión.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -21,7 +21,7 @@
 <body>
 <div class="app">
 <header class="top">
-  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.22</span></div>
+  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.23</span></div>
     <button id="instalar" class="inst" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Instalar</button></div>
   <nav class="tabs" role="tablist">
     <button role="tab" data-t="gm" aria-selected="true">Gas mín.</button>
@@ -86,11 +86,11 @@
 <!-- DECO -->
 <section class="tab" id="t-dc">
   <p class="intro">Planificador de descompresión con los gases que llevas.</p>
-  <label class="f"><span class="l">Modelo</span><span class="r"><select id="dc-mod" required><option value="" disabled selected hidden>Bühlmann ZHL-16C</option><option value="C">Bühlmann ZHL-16C</option><option value="B">Bühlmann ZHL-16B</option><option value="A">Bühlmann ZHL-16A</option></select></span></label>
+  <label class="f"><span class="l">Modelo</span><span class="r"><select id="dc-mod" required><option value="C">Bühlmann ZHL-16C</option><option value="B">Bühlmann ZHL-16B</option><option value="A">Bühlmann ZHL-16A</option><option value="" disabled selected hidden>Bühlmann ZHL-16C</option></select></span></label>
   <div class="grid2">
     <label class="f"><span class="l">GF bajo</span><span class="r"><input id="dc-gfl" inputmode="numeric" value="" placeholder="30"><span class="u">%</span></span></label>
     <label class="f"><span class="l">GF alto</span><span class="r"><input id="dc-gfh" inputmode="numeric" value="" placeholder="80"><span class="u">%</span></span></label>
-    <label class="f"><span class="l">Salinidad</span><span class="r"><select id="dc-sal" required><option value="" disabled selected hidden>Mar</option><option value="mar">Mar</option><option value="dulce">Dulce</option></select></span></label>
+    <label class="f"><span class="l">Salinidad</span><span class="r"><select id="dc-sal" required><option value="mar">Mar</option><option value="dulce">Dulce</option><option value="" disabled selected hidden>Mar</option></select></span></label>
     <label class="f"><span class="l">Altitud</span><span class="r"><input id="dc-alt" inputmode="numeric" value="" placeholder="0"><span class="u">m</span></span></label>
   </div>
   <div class="grid2">
@@ -102,7 +102,7 @@
     <label class="f"><span class="l">Velocidad de descenso</span><span class="r"><input id="dc-vd" inputmode="decimal" value="" placeholder="20"><span class="u">m/min</span></span></label>
     <label class="f"><span class="l">Velocidad de ascenso</span><span class="r"><input id="dc-va" inputmode="decimal" value="" placeholder="9"><span class="u">m/min</span></span></label>
   </div>
-  <label class="f"><span class="l">Última parada</span><span class="r"><select id="dc-last" required><option value="" disabled selected hidden>6 m</option><option value="6">6 m</option><option value="3">3 m</option></select></span></label>
+  <label class="f"><span class="l">Última parada</span><span class="r"><select id="dc-last" required><option value="6">6 m</option><option value="3">3 m</option><option value="" disabled selected hidden>6 m</option></select></span></label>
 
   <h2 class="sec">Gases que llevas</h2>
   <div class="grid2">
@@ -132,9 +132,9 @@
   <p class="intro">Cómo preparar tu mezcla por presiones parciales (primero helio, luego oxígeno y al final aire) y cuánto cuesta.</p>
   <div class="grid2">
     <label class="f"><span class="l">Botella</span><span class="r"><select id="gb-bot" required>
-      <option value="" disabled selected hidden>2x12 L</option><option value="5.7">S40 (5,7 L)</option><option value="6">6 L</option><option value="7">7 L</option><option value="10">10 L</option><option value="11.1">S80 (11,1 L)</option><option value="12">12 L</option><option value="15">15 L</option><option value="18">18 L</option><option value="20">2x10 L</option><option value="24">2x12 L</option><option value="30">2x15 L</option><option value="36">2x18 L</option><option value="otra">Otra</option>
-    </select></span></label>
-    <label class="f"><span class="l">Modelo de gas</span><span class="r"><select id="gb-mod" required><option value="" disabled selected hidden>Real</option><option value="real">Real</option><option value="ideal">Ideal</option></select></span></label>
+      <option value="5.7">S40 (5,7 L)</option><option value="6">6 L</option><option value="7">7 L</option><option value="10">10 L</option><option value="11.1">S80 (11,1 L)</option><option value="12">12 L</option><option value="15">15 L</option><option value="18">18 L</option><option value="20">2x10 L</option><option value="24">2x12 L</option><option value="30">2x15 L</option><option value="36">2x18 L</option><option value="otra">Otra</option>
+    <option value="" disabled selected hidden>2x12 L</option></select></span></label>
+    <label class="f"><span class="l">Modelo de gas</span><span class="r"><select id="gb-mod" required><option value="real">Real</option><option value="ideal">Ideal</option><option value="" disabled selected hidden>Real</option></select></span></label>
   </div>
   <label class="f" id="gb-volf" hidden><span class="l">Volumen de la botella</span><span class="r"><input id="gb-vol" inputmode="decimal" value="" placeholder="15"><span class="u">L</span></span></label>
 

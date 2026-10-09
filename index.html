@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MyBuddyPlanner (Beta v0.1.19)</title>
+<title>MyBuddyPlanner (Beta v0.1.20)</title>
 <meta name="theme-color" content="#0b1216">
 <meta name="description" content="Planificador de buceo técnico: gas mínimo, consumo, mezclas y descompresión.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -21,7 +21,7 @@
 <body>
 <div class="app">
 <header class="top">
-  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.19</span></div>
+  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.20</span></div>
     <button id="instalar" class="inst" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Instalar</button></div>
   <nav class="tabs" role="tablist">
     <button role="tab" data-t="gm" aria-selected="true">Gas mín.</button>
@@ -41,14 +41,14 @@
     <label class="f"><span class="l">Profundidad final</span><span class="r"><input id="gm-d2" inputmode="decimal" value="" placeholder="21"><span class="u">m</span></span></label>
   </div>
   <p class="hint">La profundidad final es donde llegas a la siguiente fuente de gas respirable (por ejemplo, 21 m con EAN50).</p>
-  <label class="f"><span class="l">Bibotella</span><span class="r"><select id="gm-bib" class="bib"></select></span></label>
+  <label class="f"><span class="l">Botella</span><span class="r"><select id="gm-bib" class="bib"></select></span></label>
   <div id="gm-out"></div>
 </section>
 
 <!-- CONSUMO -->
 <section class="tab" id="t-cs">
   <p class="intro">Cuánto tiempo puedes estar a una profundidad con el gas que te sobra después del gas mínimo.</p>
-  <label class="f"><span class="l">Bibotella</span><span class="r"><select id="cs-bib" class="bib"></select></span></label>
+  <label class="f"><span class="l">Botella</span><span class="r"><select id="cs-bib" class="bib"></select></span></label>
   <div class="grid2">
     <label class="f"><span class="l">Presión total</span><span class="r"><input id="cs-p" inputmode="decimal" value="" placeholder="230"><span class="u">bar</span></span></label>
     <label class="f"><span class="l">Gas mínimo</span><span class="r"><input id="cs-gm" inputmode="decimal" value=""><span class="u">bar</span></span></label>
@@ -78,7 +78,7 @@
     <label class="f"><span class="l">Profundidad</span><span class="r"><input id="mi-d" inputmode="decimal" value="" placeholder="50"><span class="u">m</span></span></label>
     <label class="f"><span class="l">ppO₂</span><span class="r"><input id="mi-pp" inputmode="decimal" value="" placeholder="1,29"><span class="u">bar</span></span></label>
   </div>
-  <label class="chk"><input type="checkbox" id="mi-he" checked><span>Con helio (trimix)</span></label>
+  <label class="chk"><input type="checkbox" id="mi-he" checked><span>Con helio (Trimix)</span></label>
   <p class="hint" id="mi-hint"></p>
   <div id="mi-out"></div>
 </section>
@@ -113,7 +113,7 @@
   <div class="grid3">
     <label class="f"><span class="l">O₂</span><span class="r"><input id="dc-fo2" inputmode="decimal" value="" placeholder="21"><span class="u">%</span></span></label>
     <label class="f"><span class="l">He</span><span class="r"><input id="dc-fhe" inputmode="decimal" value="" placeholder="0"><span class="u">%</span></span></label>
-    <label class="f"><span class="l">Bibotella</span><span class="r"><select id="dc-bib" class="bib"></select></span></label>
+    <label class="f"><span class="l">Botella</span><span class="r"><select id="dc-bib" class="bib"></select></span></label>
   </div>
   <p class="hint" id="dc-gh"></p>
   <div id="dc-gases"></div>
@@ -132,7 +132,7 @@
   <p class="intro">Cómo preparar tu mezcla por presiones parciales (primero helio, luego oxígeno y al final aire) y cuánto cuesta.</p>
   <div class="grid2">
     <label class="f"><span class="l">Botella</span><span class="r"><select id="gb-bot" required>
-      <option value="" disabled selected hidden>2x12 L</option><option value="20">2x10 L</option><option value="24">2x12 L</option><option value="30">2x15 L</option><option value="36">2x18 L</option>
+      <option value="" disabled selected hidden>2x12 L</option><option value="20">2x10 L</option><option value="24">2x12 L</option><option value="30">2x15 L</option><option value="36">2x18 L</option><option value="10">10 L</option><option value="12">12 L</option><option value="15">15 L</option><option value="18">18 L</option>
       <option value="5.7">S40 (5,7 L)</option><option value="6">6 L</option><option value="7">7 L</option><option value="11.1">S80 (11,1 L)</option><option value="otra">Otra</option>
     </select></span></label>
     <label class="f"><span class="l">Modelo de gas</span><span class="r"><select id="gb-mod" required><option value="" disabled selected hidden>Real</option><option value="real">Real</option><option value="ideal">Ideal</option></select></span></label>

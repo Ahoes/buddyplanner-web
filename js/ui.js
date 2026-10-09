@@ -8,11 +8,11 @@ const Fa = (x) => { let s = F(x, 2); if (s.endsWith('0')) s = s.slice(0, -1); re
 const row = (k, v) => `<div class="row"><span>${k}</span><b>${v}</b></div>`;
 const msg = (c, t) => `<div class="msg ${c}">${t}</div>`;
 
-const BIB = [[20, '2x10 L'], [24, '2x12 L'], [30, '2x15 L'], [36, '2x18 L']];
+const BIB = [[20, '2x10 L'], [24, '2x12 L'], [30, '2x15 L'], [36, '2x18 L'], [10, '10 L'], [12, '12 L'], [15, '15 L'], [18, '18 L']]; // bibotellas y monobotellas
 const DECO_BOT = [[5.7, 'S40 (5,7 L)'], [6, '6 L'], [7, '7 L'], [11.1, 'S80 (11,1 L)']];
 // desplegables sin elegir: muestran en gris un ejemplo (opción vacía oculta)
 const ejemplo = (t) => `<option value="" disabled selected hidden>${t}</option>`;
-let bib = null; // hasta que el usuario elija bibotella
+let bib = null; // hasta que el usuario elija botella
 const bibName = () => bib ? BIB.find(b => b[0] === bib)[1] : '';
 document.querySelectorAll('select.bib').forEach(s => {
   s.required = true;
@@ -44,7 +44,7 @@ function renderGM() {
   GM = null;
   if (d1 == null || d2 == null || d1 <= 0 || d2 < 0) { out.innerHTML = msg('info', 'Introduce la profundidad inicial y la final.'); return; }
   if (d2 >= d1) { out.innerHTML = msg('bad', 'La profundidad final tiene que ser menor que la inicial.'); return; }
-  if (!bib) { out.innerHTML = msg('info', 'Elige la bibotella.'); return; }
+  if (!bib) { out.innerHTML = msg('info', 'Elige la botella.'); return; }
   const r = ENG.gasMinimo(d1, d2, bib); GM = { ...r, d1, d2 };
   out.innerHTML = `<div class="res"><div class="k">Gas mínimo</div><div class="big">${r.bares} <small>bar</small></div><div class="sub">${F(r.litros, 0)} L con ${bibName()}</div></div>
   <div class="card"><h3>Desglose</h3>
@@ -263,7 +263,7 @@ function renderDecoCore() {
     <h2 class="sec">Gas necesario para la inmersión</h2>
     <div class="ngas"><div class="hd"><b>Gas de espalda · ${fondoG.nombre}</b>${sacBox('f', sacFondo, 'gas de espalda')}</div>
       <div class="vals"><div class="val"><div class="l">Litros</div><div class="n">${sacFondo ? F(fondoG.litros, 0) : '–'}</div></div>
-      <div class="val"><div class="l">Bares${bib ? ` (${bibName()})` : ''}</div><div class="n">${sacFondo && bib ? fondoBar : '–'}</div></div></div>${!sacFondo ? sinSac : !bib ? '<p class="hint" style="margin:6px 0 0">Elige la bibotella para ver los bares.</p>' : ''}</div>
+      <div class="val"><div class="l">Bares${bib ? ` (${bibName()})` : ''}</div><div class="n">${sacFondo && bib ? fondoBar : '–'}</div></div></div>${!sacFondo ? sinSac : !bib ? '<p class="hint" style="margin:6px 0 0">Elige la botella para ver los bares.</p>' : ''}</div>
     ${decoCards}`;
   GRAF = { perfil: r.perfil, gf: `${Fn(gfl)}/${Fn(gfh)}` };
   dibujarPerfil();

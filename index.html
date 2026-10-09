@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MyBuddyPlanner (Beta v0.1.16)</title>
+<title>MyBuddyPlanner (Beta v0.1.17)</title>
 <meta name="theme-color" content="#0b1216">
 <meta name="description" content="Planificador de buceo técnico: gas mínimo, consumo, mezclas y descompresión.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -21,7 +21,7 @@
 <body>
 <div class="app">
 <header class="top">
-  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.16</span></div>
+  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.17</span></div>
     <button id="instalar" class="inst" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Instalar</button></div>
   <nav class="tabs" role="tablist">
     <button role="tab" data-t="gm" aria-selected="true">Gas mín.</button>
@@ -137,19 +137,19 @@
     </select></span></label>
     <label class="f"><span class="l">Modelo de gas</span><span class="r"><select id="gb-mod"><option value="real">Real</option><option value="ideal">Ideal</option></select></span></label>
   </div>
-  <label class="f" id="gb-volf" hidden><span class="l">Volumen de la botella</span><span class="r"><input id="gb-vol" inputmode="decimal" value="15"><span class="u">L</span></span></label>
+  <label class="f" id="gb-volf" hidden><span class="l">Volumen de la botella</span><span class="r"><input id="gb-vol" inputmode="decimal" value="" placeholder="15"><span class="u">L</span></span></label>
 
   <p class="hint" style="margin-top:4px">Lo que queda en la botella (0 bar si está vacía)</p>
   <div class="grid3">
-    <label class="f"><span class="l">Presión</span><span class="r"><input id="gb-p0" inputmode="decimal" value="0"><span class="u">bar</span></span></label>
-    <label class="f"><span class="l">O₂</span><span class="r"><input id="gb-o0" inputmode="decimal" value="21"><span class="u">%</span></span></label>
-    <label class="f"><span class="l">He</span><span class="r"><input id="gb-h0" inputmode="decimal" value="0"><span class="u">%</span></span></label>
+    <label class="f"><span class="l">Presión</span><span class="r"><input id="gb-p0" inputmode="decimal" value="" placeholder="0"><span class="u">bar</span></span></label>
+    <label class="f"><span class="l">O₂</span><span class="r"><input id="gb-o0" inputmode="decimal" value="" placeholder="21"><span class="u">%</span></span></label>
+    <label class="f"><span class="l">He</span><span class="r"><input id="gb-h0" inputmode="decimal" value="" placeholder="0"><span class="u">%</span></span></label>
   </div>
   <p class="hint" style="margin-top:4px">Mezcla que quieres</p>
   <div class="grid3">
-    <label class="f"><span class="l">Presión</span><span class="r"><input id="gb-p1" inputmode="decimal" value="230"><span class="u">bar</span></span></label>
-    <label class="f"><span class="l">O₂</span><span class="r"><input id="gb-o1" inputmode="decimal" value="21"><span class="u">%</span></span></label>
-    <label class="f"><span class="l">He</span><span class="r"><input id="gb-h1" inputmode="decimal" value="35"><span class="u">%</span></span></label>
+    <label class="f"><span class="l">Presión</span><span class="r"><input id="gb-p1" inputmode="decimal" value="" placeholder="230"><span class="u">bar</span></span></label>
+    <label class="f"><span class="l">O₂</span><span class="r"><input id="gb-o1" inputmode="decimal" value="" placeholder="21"><span class="u">%</span></span></label>
+    <label class="f"><span class="l">He</span><span class="r"><input id="gb-h1" inputmode="decimal" value="" placeholder="0"><span class="u">%</span></span></label>
   </div>
   <p class="hint" style="margin-top:4px">Precios por litro</p>
   <div class="grid3">

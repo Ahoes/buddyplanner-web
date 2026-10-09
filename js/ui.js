@@ -10,7 +10,7 @@ const msg = (c, t) => `<div class="msg ${c}">${t}</div>`;
 
 // --- Preferencias: valores por defecto que la app recuerda en este dispositivo ---
 // Los datos de cada inmersión (profundidades, tiempo, presión, mezcla) empiezan vacíos.
-const PREFS = ['cs-sac', 'mz-pp', 'mz-end', 'mi-pp', 'mi-he', 'dc-mod', 'dc-gfl', 'dc-gfh', 'dc-sal', 'dc-alt', 'dc-vd', 'dc-va', 'dc-last', 'dc-ppf', 'dc-ppd'];
+const PREFS = ['cs-sac', 'mz-pp', 'mz-end', 'mi-pp', 'mi-he', 'dc-mod', 'dc-gfl', 'dc-gfh', 'dc-sal', 'dc-alt', 'dc-vd', 'dc-va', 'dc-last', 'dc-ppf', 'dc-ppd', 'gb-bot', 'gb-mod', 'gb-ph', 'gb-po', 'gb-pa'];
 const valorDe = (el) => el.type === 'checkbox' ? el.checked : el.value;
 const ponerValor = (el, v) => { if (el.type === 'checkbox') el.checked = !!v; else el.value = v; };
 const PREF_DEF = { ...Object.fromEntries(PREFS.map((id) => [id, valorDe($(id))])), bib: 24, sacFondo: 20 };
@@ -375,7 +375,7 @@ function renderGB() {
   const p1 = num('gb-p1'), o1 = num('gb-o1'), h1 = num('gb-h1') ?? 0;
   const pr = gbPrecios();
   if (vol == null || vol <= 0) return void (out.innerHTML = msg('info', 'Indica el volumen de la botella.'));
-  if (p1 == null || p1 <= 0 || o1 == null || o1 <= 0) return void (out.innerHTML = msg('info', 'Indica la presión final y la mezcla que quieres.'));
+  if (p1 == null || p1 <= 0 || o1 == null || o1 <= 0) return void (out.innerHTML = msg('info', 'Indica la presión y el oxígeno de la mezcla que quieres. Si la botella no está vacía, indica también lo que queda.'));
   if (p0 < 0 || o0 < 0 || h0 < 0 || h1 < 0 || o1 > 100 || o0 > 100) return void (out.innerHTML = msg('bad', 'Revisa los porcentajes y las presiones.'));
   if (p0 > 0 && o0 <= 0) return void (out.innerHTML = msg('bad', 'Indica el oxígeno de lo que queda en la botella.'));
   if (pr.he < 0 || pr.o2 < 0 || pr.aire < 0) return void (out.innerHTML = msg('bad', 'Los precios no pueden ser negativos.'));
@@ -410,7 +410,7 @@ $('prefs-reset').addEventListener('click', () => {
   PREFS.forEach((id) => ponerValor($(id), PREF_DEF[id]));
   bib = PREF_DEF.bib; sacFondo = PREF_DEF.sacFondo;
   document.querySelectorAll('select.bib').forEach((o) => o.value = String(bib));
-  try { localStorage.removeItem('bp-prefs'); } catch (e) {}
+  try { localStorage.removeItem('bp-prefs'); localStorage.removeItem('bp-precios'); } catch (e) {}
   prefs = {};
   renderAll();
 });

@@ -212,7 +212,7 @@ function renderDecoCore() {
   else if (dn > 5.2) av.push(msg('warn', `Densidad del gas de fondo a ${Fn(d)} m: ${F(dn, 2)} g/L, por encima de 5,2 recomendado.`));
   if (fo2 < 18) av.push(hipoxica(fo2));
   if (validos.length < decoGases.length) av.push(msg('warn', 'Hay un gas de deco con valores no válidos; no se ha tenido en cuenta.'));
-  decoG.forEach(g => { if (g.tiempo <= 0) av.push(msg('info', `${g.nombre} no se usa en esta inmersión.`)); });
+  if (!r.ascensoDirecto) decoG.forEach(g => { if (g.tiempo <= 0) av.push(msg('info', `${g.nombre} no se usa en esta inmersión.`)); });
   decoG.forEach(g => { const b = Math.ceil(g.litros * 1.5 / g.cfg.bot - 1e-9); if (g.cfg.sac && g.cfg.bot && g.tiempo > 0 && b > 200) av.push(msg('warn', `${g.nombre}: el gas de emergencia (${b} bar) no cabe en una ${DECO_BOT.find(x => x[0] === g.cfg.bot)[1]}. Usa una botella mayor.`)); });
   if (r.cns > 100) av.push(msg('bad', `CNS ${F(r.cns, 0)} %: por encima del 100 %.`));
   else if (r.cns > 80) av.push(msg('warn', `CNS ${F(r.cns, 0)} %: por encima del 80 %.`));
@@ -259,7 +259,7 @@ function renderDecoCore() {
       <div><div class="k">Descompresión</div><div class="big">${deco} <small>min</small></div></div>
       <div><div class="k">Tiempo total</div><div class="big">${total} <small>min</small></div></div></div>
       <div class="sub" style="margin-top:6px">Ascenso ${Math.ceil(r.ascenso - 1e-9)}', primera parada ${obligatorias.length ? obligatorias[0].prof + ' m' : '—'}, CNS ${F(r.cns, 0)} %, ${F(r.otu, 0)} OTU</div></div>
-    ${obligatorias.length ? `<div class="card"><table class="stops"><thead><tr><th>Parada</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${stopsRows}</tbody></table></div>` : msg('ok', r.paradas.length ? 'Sin paradas obligatorias. El cambio de gas está en el runtime.' : 'Sin paradas obligatorias.')}
+    ${obligatorias.length ? `<div class="card"><table class="stops"><thead><tr><th>Parada</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${stopsRows}</tbody></table></div>` : msg('ok', r.ascensoDirecto ? 'Sin paradas obligatorias: ascenso directo a superficie con el gas de fondo, sin cambios de gas.' : r.paradas.length ? 'Sin paradas obligatorias. El cambio de gas está en el runtime.' : 'Sin paradas obligatorias.')}
     <h2 class="sec">Perfil de la inmersión</h2><div class="card chart" id="dc-chart"></div>
     <h2 class="sec">Runtime</h2><div class="card"><table class="stops rtt"><thead><tr><th>Tramo</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${logRows}</tbody></table></div>
     <h2 class="sec">Avisos</h2>${av.join('')}

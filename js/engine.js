@@ -105,7 +105,16 @@ const ENG = (() => {
     return `EAN${o2}`;
   }
 
+  // Si no hace falta ninguna parada obligatoria, se sube directo a superficie con el gas de fondo,
+  // sin cambios de gas (como Subsurface). Solo si así tampoco hay paradas; si no, se usa el plan con cambios.
   function planDeco(p) {
+    const r = planDecoCalc(p);
+    if (r.error || !(p.deco && p.deco.length) || r.paradas.some((x) => !x.soloCambio)) return r;
+    const directo = planDecoCalc({ ...p, directo: true });
+    return !directo.error && directo.paradas.length === 0 ? { ...directo, ascensoDirecto: true } : r;
+  }
+
+  function planDecoCalc(p) {
     // p: {prof, tiempo, gfLow, gfHigh, salinidad, altitud, ultimaParada, fondo:{o2,he}, deco:[{o2,he}], vDesc, vAsc1, vAsc2, ppo2Deco, sacFondo, sacDeco}
     // presión en superficie con la altitud como Subsurface (escala de 7.800 m)
     const psurf = 1.01325 * Math.exp(-p.altitud / 7800);
@@ -226,6 +235,7 @@ const ENG = (() => {
     pAncla = Math.max(psurf + 1, presionTolerada(gfL));
 
     const mejorGas = (d, actual) => {
+      if (p.directo) return actual; // ascenso directo a superficie: sin cambios de gas
       let best = actual;
       for (const g of gases) {
         if (g.rol !== 'deco') continue;

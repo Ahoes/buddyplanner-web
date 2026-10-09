@@ -130,8 +130,19 @@ const ENG = (() => {
     }
 
     const log = [];
+    // muestras para la gráfica (cada 10 s): copia de los tejidos, sin tocar el cálculo
+    const muestras = [{ t: 0, d: 0, gas: gases[0].nombre, n2: pN2.slice(), he: pHe.slice() }];
+    function muestrear(d0, d1, t, g) {
+      const n2 = pN2.slice(), he = pHe.slice(), n = Math.max(1, Math.ceil(t * 6 - 1e-9)), dt = t / n;
+      for (let j = 1; j <= n; j++) {
+        const da = d0 + (d1 - d0) * (j - 1) / n, db = d0 + (d1 - d0) * j / n;
+        cargar(n2, he, da, db, dt, g);
+        muestras.push({ t: runtime + dt * j, d: db, gas: g.nombre, n2: n2.slice(), he: he.slice() });
+      }
+    }
     function segmento(d0, d1, t, g, tipo) {
       if (t <= 0) return;
+      muestrear(d0, d1, t, g);
       cargar(pN2, pHe, d0, d1, t, g);
       // oxígeno y gas, por pasos
       const n = Math.max(1, Math.ceil(t / 0.1));
@@ -260,10 +271,25 @@ const ENG = (() => {
     const vFinal = cur > primera ? p.vAsc1 : p.vAsc2;
     segmento(cur, 0, cur / vFinal, gas, 'ascenso');
 
+    // perfil para la gráfica: techo con tus GF, techo con el valor M (GF 100 %) y sobresaturación
+    const perfil = muestras.map(m => {
+      const pamb = P(m.d);
+      let sat = -Infinity, comp = 0;
+      for (let i = 0; i < 16; i++) {
+        const pt = m.n2[i] + m.he[i];
+        const a = (C.nA[i] * m.n2[i] + C.hA[i] * m.he[i]) / pt;
+        const b = (C.nB[i] * m.n2[i] + C.hB[i] * m.he[i]) / pt;
+        const s = (pt - pamb) / (pamb / b + a - pamb); // fracción del valor M a esta profundidad
+        if (s > sat) { sat = s; comp = i + 1; }
+      }
+      return { t: m.t, d: m.d, gas: m.gas, techoGF: Math.max(0, techoGF(m.n2, m.he)),
+        techoM: Math.max(0, (presionTolerada(1, m.n2, m.he) - psurf) / barM), sat: sat * 100, comp };
+    });
+
     const ascenso = runtime - p.tiempo;
     const deco = paradas.length ? runtime - inicioDeco : 0;
     return {
-      paradas, log, primera, deco, ascenso, runtime, cns, otu, psurf, barM,
+      paradas, log, primera, deco, ascenso, runtime, cns, otu, psurf, barM, perfil,
       gases: gases.map(g => ({ nombre: g.nombre, rol: g.rol, idx: g.idx, o2: g.o2, he: g.he, litros: g.litros, tiempo: g.tiempo, desde: g.desde })),
     };
   }

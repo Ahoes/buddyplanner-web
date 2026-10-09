@@ -22,6 +22,7 @@ document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('cl
   document.querySelectorAll('nav.tabs button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
   document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('on', s.id === 't-' + b.dataset.t));
   window.scrollTo(0, 0);
+  if (b.dataset.t === 'dc') dibujarPerfil(); // la gráfica necesita el ancho real de la pestaña visible
 }));
 
 function densMsg(dn) {
@@ -240,6 +241,7 @@ function renderDecoCore() {
       <div><div class="k">Tiempo total</div><div class="big">${total} <small>min</small></div></div></div>
       <div class="sub" style="margin-top:6px">Ascenso ${Math.ceil(r.ascenso - 1e-9)}', primera parada ${r.paradas.length ? r.paradas[0].prof + ' m' : '—'}, CNS ${F(r.cns, 0)} %, ${F(r.otu, 0)} OTU</div></div>
     ${r.paradas.length ? `<div class="card"><table class="stops"><thead><tr><th>Parada</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${stopsRows}</tbody></table></div>` : msg('ok', 'Sin paradas obligatorias.')}
+    <h2 class="sec">Perfil de la inmersión</h2><div class="card chart" id="dc-chart"></div>
     <h2 class="sec">Runtime</h2><div class="card"><table class="stops rtt"><thead><tr><th>Tramo</th><th>Tiempo</th><th>Gas</th><th>Runtime</th></tr></thead><tbody>${logRows}</tbody></table></div>
     <h2 class="sec">Avisos</h2>${av.join('')}
     <h2 class="sec">Sensibilidad</h2><div class="card">${sens.join('')}</div>
@@ -248,7 +250,77 @@ function renderDecoCore() {
       <div class="vals"><div class="val"><div class="l">Litros</div><div class="n">${F(fondoG.litros, 0)}</div></div>
       <div class="val"><div class="l">Bares (${bibName()})</div><div class="n">${fondoBar}</div></div></div></div>
     ${decoCards}`;
+  GRAF = { perfil: r.perfil, gf: `${Fn(gfl)}/${Fn(gfh)}` };
+  dibujarPerfil();
 }
+
+// --- Gráfica del perfil: profundidad, techo con tus GF y techo con el valor M (GF 100 %) ---
+const COL = { perfil: '#2fa38d', gf: '#c4842e', m: '#d0588a' }; // validados sobre el fondo oscuro
+let GRAF = null;
+function dibujarPerfil() {
+  const box = $('dc-chart');
+  if (!box || !GRAF) return;
+  const f = GRAF.perfil, W = Math.max(260, box.clientWidth - 24), H = Math.round(Math.min(280, Math.max(200, W * 0.55)));
+  const m = { l: 34, r: 8, t: 8, b: 22 };
+  const tMax = f[f.length - 1].t, dMaxReal = Math.max(...f.map(x => x.d));
+  const paso = dMaxReal > 80 ? 20 : 10, dMax = Math.ceil(dMaxReal / paso) * paso || paso;
+  const pasoT = tMax > 120 ? 20 : 10;
+  const X = (t) => m.l + (W - m.l - m.r) * t / tMax, Y = (d) => m.t + (H - m.t - m.b) * d / dMax;
+  const linea = (k) => f.map((p, i) => `${i ? 'L' : 'M'}${X(p.t).toFixed(1)},${Y(p[k]).toFixed(1)}`).join('');
+  // techos: solo donde hay techo (por debajo de la superficie)
+  const techo = (k) => { let d = '', dentro = false;
+    f.forEach((p, i) => { const on = p[k] > 0.05 || (f[i - 1] && f[i - 1][k] > 0.05) || (f[i + 1] && f[i + 1][k] > 0.05);
+      if (on) { d += `${dentro ? 'L' : 'M'}${X(p.t).toFixed(1)},${Y(p[k]).toFixed(1)}`; dentro = true; } else dentro = false; });
+    return d; };
+  let grid = '';
+  for (let d = 0; d <= dMax; d += paso) grid += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(d)}" y2="${Y(d)}" stroke="var(--line)" stroke-width="1"/><text class="ax" x="${m.l - 6}" y="${Y(d) + 4}" text-anchor="end">${d}</text>`;
+  for (let t = 0; t <= tMax; t += pasoT) grid += `<text class="ax" x="${X(t)}" y="${H - 6}" text-anchor="middle">${t}'</text>`;
+  const AYUDA = '<div class="rd-help">Mueve el dedo o el ratón sobre la gráfica para ver cada momento de la inmersión.</div>';
+  box.innerHTML = `<div class="leg"><span><i style="border-color:${COL.perfil}"></i>Perfil</span><span><i style="border-color:${COL.gf}"></i>Techo con GF ${GRAF.gf}</span><span><i class="dash" style="border-color:${COL.m}"></i>Techo con valor M (GF 100 %)</span></div>
+    <div class="tip" aria-live="polite">${AYUDA}</div>
+    <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="Perfil de la inmersión con los techos de descompresión. Mueve el dedo o el ratón, o usa las flechas, para ver los valores.">
+      ${grid}
+      <path d="${techo('techoM')}" fill="none" stroke="${COL.m}" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round"/>
+      <path d="${techo('techoGF')}" fill="none" stroke="${COL.gf}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="${linea('d')}" fill="none" stroke="${COL.perfil}" stroke-width="2" stroke-linejoin="round"/>
+      <g id="dc-cur" visibility="hidden"><line y1="${m.t}" y2="${H - m.b}" stroke="var(--tx2)" stroke-width="1"/>
+        <circle r="4" fill="${COL.perfil}" stroke="var(--surf)" stroke-width="2"/><circle r="4" fill="${COL.gf}" stroke="var(--surf)" stroke-width="2"/><circle r="4" fill="${COL.m}" stroke="var(--surf)" stroke-width="2"/></g>
+    </svg>
+    <p class="hint">Profundidad en metros y runtime en minutos.</p>`;
+  const svg = box.querySelector('svg'), cur = $('dc-cur'), tip = box.querySelector('.tip');
+  let idx = null;
+  const mostrar = (i) => {
+    idx = Math.max(0, Math.min(f.length - 1, i));
+    const p = f[idx], x = X(p.t);
+    cur.setAttribute('visibility', 'visible');
+    cur.querySelector('line').setAttribute('x1', x); cur.querySelector('line').setAttribute('x2', x);
+    const cs = cur.querySelectorAll('circle');
+    [['d', 0], ['techoGF', 1], ['techoM', 2]].forEach(([k, j]) => { cs[j].setAttribute('cx', x); cs[j].setAttribute('cy', Y(p[k])); cs[j].setAttribute('visibility', k === 'd' || p[k] > 0.05 ? 'visible' : 'hidden'); });
+    const s = Math.round(p.t * 60), rt = `${Math.floor(s / 60)}'${String(s % 60).padStart(2, '0')}"`;
+    const tc = (v) => v > 0.05 ? `${F(v, 1)} m` : 'sin techo';
+    tip.innerHTML = `<div class="rd-h"><b>${rt}</b> · ${F(p.d, 1)} m · ${p.gas === 'Oxígeno' ? 'O₂' : p.gas}</div>
+      <div class="rd-v"><div><b>${tc(p.techoGF)}</b><span><i style="border-color:${COL.gf}"></i>Techo GF</span></div>
+      <div><b>${tc(p.techoM)}</b><span><i class="dash" style="border-color:${COL.m}"></i>Techo valor M</span></div>
+      <div><b>${p.sat > 0 ? F(p.sat, 0) + ' %' : '—'}</b><span>${p.sat > 0 ? `valor M (C${p.comp})` : 'sin sobresaturación'}</span></div></div>`;
+  };
+  const ocultar = () => { cur.setAttribute('visibility', 'hidden'); tip.innerHTML = AYUDA; };
+  const cercano = (e) => {
+    const r = svg.getBoundingClientRect(), t = (e.clientX - r.left - m.l) / (W - m.l - m.r) * tMax;
+    let lo = 0, hi = f.length - 1;
+    while (hi - lo > 1) { const md = (lo + hi) >> 1; if (f[md].t < t) lo = md; else hi = md; }
+    return Math.abs(f[lo].t - t) <= Math.abs(f[hi].t - t) ? lo : hi;
+  };
+  svg.addEventListener('pointermove', (e) => mostrar(cercano(e)));
+  svg.addEventListener('pointerdown', (e) => mostrar(cercano(e)));
+  svg.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') ocultar(); });
+  svg.addEventListener('blur', ocultar);
+  svg.addEventListener('keydown', (e) => {
+    const k = { ArrowRight: 1, ArrowLeft: -1, PageUp: 30, PageDown: -30 }[e.key];
+    if (k == null) return; e.preventDefault(); mostrar(idx == null ? 0 : idx + k);
+  });
+}
+let anchoGraf = 0;
+window.addEventListener('resize', () => { const b = $('dc-chart'); if (b && b.clientWidth !== anchoGraf) { anchoGraf = b.clientWidth; dibujarPerfil(); } });
 
 // Deco toma profundidad y tiempo de Consumo (tiempo redondeado abajo); sin cálculo de consumo, 0 m y 0 min.
 // Solo se copian cuando cambia el resultado de Consumo, así se respeta lo que el usuario escriba en Deco.

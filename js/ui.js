@@ -10,11 +10,13 @@ const msg = (c, t) => `<div class="msg ${c}">${t}</div>`;
 
 const BIB = [[20, '2x10 L'], [24, '2x12 L'], [30, '2x15 L'], [36, '2x18 L']];
 const DECO_BOT = [[5.7, 'S40 (5,7 L)'], [6, '6 L'], [7, '7 L'], [11.1, 'S80 (11,1 L)']];
-let bib = 24;
-const bibName = () => BIB.find(b => b[0] === bib)[1];
+// desplegables sin elegir: muestran en gris un ejemplo (opción vacía oculta)
+const ejemplo = (t) => `<option value="" disabled selected hidden>${t}</option>`;
+let bib = null; // hasta que el usuario elija bibotella
+const bibName = () => bib ? BIB.find(b => b[0] === bib)[1] : '';
 document.querySelectorAll('select.bib').forEach(s => {
-  s.innerHTML = BIB.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
-  s.value = String(bib);
+  s.required = true;
+  s.innerHTML = ejemplo('2x12 L') + BIB.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
   s.addEventListener('change', e => { bib = Number(e.target.value); document.querySelectorAll('select.bib').forEach(o => o.value = String(bib)); renderAll(); });
 });
 
@@ -42,6 +44,7 @@ function renderGM() {
   GM = null;
   if (d1 == null || d2 == null || d1 <= 0 || d2 < 0) { out.innerHTML = msg('info', 'Introduce la profundidad inicial y la final.'); return; }
   if (d2 >= d1) { out.innerHTML = msg('bad', 'La profundidad final tiene que ser menor que la inicial.'); return; }
+  if (!bib) { out.innerHTML = msg('info', 'Elige la bibotella.'); return; }
   const r = ENG.gasMinimo(d1, d2, bib); GM = { ...r, d1, d2 };
   out.innerHTML = `<div class="res"><div class="k">Gas mínimo</div><div class="big">${r.bares} <small>bar</small></div><div class="sub">${F(r.litros, 0)} L con ${bibName()}</div></div>
   <div class="card"><h3>Desglose</h3>
@@ -65,7 +68,7 @@ function renderCS() {
   $('cs-gm-hint').textContent = !GM ? 'Calcula el gas mínimo en su pestaña o escríbelo aquí.'
     : gm === GM.bares ? `Sale de la pestaña Gas mínimo (${Fn(GM.d1)} → ${Fn(GM.d2)} m con ${bibName()}). Puedes cambiarlo.`
     : `Cambiado a mano. El planificado en la pestaña Gas mínimo es ${GM.bares} bar.`;
-  if (gm == null || gm < 0 || p == null || d == null || sac == null || d < 0 || sac <= 0) { out.innerHTML = msg('info', 'Completa los datos para calcular el tiempo.'); return; }
+  if (!bib || gm == null || gm < 0 || p == null || d == null || sac == null || d < 0 || sac <= 0) { out.innerHTML = msg('info', 'Completa los datos para calcular el tiempo.'); return; }
   const bares = p - gm;
   if (bares <= 0) { out.innerHTML = msg('bad', `La presión total (${Fn(p)} bar) no cubre el gas mínimo (${Fn(gm)} bar). No queda gas para gastar.`); return; }
   const r = ENG.consumo(bib, bares, d, sac);
@@ -127,7 +130,7 @@ function buildDecoGases() {
 }
 document.addEventListener('click', e => {
   const a = e.target.closest('[data-add]');
-  if (a) { if (decoGases.length >= 4) return; const o2 = Number(a.dataset.add); decoGases.push({ o2, he: 0, bot: o2 === 100 ? 5.7 : 11.1, sac: null }); buildDecoGases(); renderDeco(); return; }
+  if (a) { if (decoGases.length >= 4) return; const o2 = Number(a.dataset.add); decoGases.push({ o2, he: 0, bot: null, sac: null }); buildDecoGases(); renderDeco(); return; }
   const d = e.target.closest('[data-del]');
   if (d) { decoGases.splice(Number(d.dataset.del), 1); buildDecoGases(); renderDeco(); return; }
 });
@@ -172,7 +175,7 @@ function renderDecoCore() {
     el.innerHTML = (g.o2 > 0 && g.o2 <= 100) ? `<b>${ENG.nombreGas(g.o2, g.he || 0)}</b>${ppDecoOk ? `MOD ${F((ppDeco / (g.o2 / 100) - 1) * 10, 0)} m` : ''}` : '<b>–</b>'; });
 
   if (d == null || t == null || d <= 0 || t <= 0) return void (out.innerHTML = msg('info', 'Introduce profundidad y tiempo de fondo.'));
-  const falta = [[gfl, 'GF bajo'], [gfh, 'GF alto'], [vd, 'velocidad de descenso'], [va, 'velocidad de ascenso'], [ppMax, 'ppO₂ máx. de fondo'], [ppDeco, 'ppO₂ máx. de deco'], [fo2, 'O₂ del gas de fondo']]
+  const falta = [[gfl, 'GF bajo'], [gfh, 'GF alto'], [vd, 'velocidad de descenso'], [va, 'velocidad de ascenso'], [ppMax, 'ppO₂ máx. de fondo'], [ppDeco, 'ppO₂ máx. de deco'], [fo2, 'O₂ del gas de fondo'], [$('dc-mod').value || null, 'modelo'], [$('dc-sal').value || null, 'salinidad'], [$('dc-last').value || null, 'última parada']]
     .filter(([v]) => v == null).map(([, n]) => n);
   if (falta.length) return void (out.innerHTML = msg('info', `Completa: ${falta.join(', ')}.`));
   if (d > 150) return void (out.innerHTML = msg('bad', 'Profundidad fuera de rango (máximo 150 m).'));
@@ -208,7 +211,7 @@ function renderDecoCore() {
   if (fo2 < 18) av.push(hipoxica(fo2));
   if (validos.length < decoGases.length) av.push(msg('warn', 'Hay un gas de deco con valores no válidos; no se ha tenido en cuenta.'));
   decoG.forEach(g => { if (g.tiempo <= 0) av.push(msg('info', `${g.nombre} no se usa en esta inmersión.`)); });
-  decoG.forEach(g => { const b = Math.ceil(g.litros * 1.5 / g.cfg.bot - 1e-9); if (g.cfg.sac && g.tiempo > 0 && b > 200) av.push(msg('warn', `${g.nombre}: el gas de emergencia (${b} bar) no cabe en una ${DECO_BOT.find(x => x[0] === g.cfg.bot)[1]}. Usa una botella mayor.`)); });
+  decoG.forEach(g => { const b = Math.ceil(g.litros * 1.5 / g.cfg.bot - 1e-9); if (g.cfg.sac && g.cfg.bot && g.tiempo > 0 && b > 200) av.push(msg('warn', `${g.nombre}: el gas de emergencia (${b} bar) no cabe en una ${DECO_BOT.find(x => x[0] === g.cfg.bot)[1]}. Usa una botella mayor.`)); });
   if (r.cns > 100) av.push(msg('bad', `CNS ${F(r.cns, 0)} %: por encima del 100 %.`));
   else if (r.cns > 80) av.push(msg('warn', `CNS ${F(r.cns, 0)} %: por encima del 80 %.`));
   if (r.otu > 300) av.push(msg('warn', `${F(r.otu, 0)} OTU: por encima de 300, referencia para varios días seguidos.`));
@@ -230,22 +233,22 @@ function renderDecoCore() {
   const TIPO = { descenso: 'Descenso', fondo: 'Fondo', ascenso: 'Ascenso', cambio: 'Cambio de gas', parada: 'Parada' };
   const logRows = r.log.map(l => `<tr${l.tipo === 'cambio' ? ' class="sw"' : ''}><td>${TIPO[l.tipo]} ${l.d0 === l.d1 ? l.d0 + ' m' : Fn(l.d0) + '→' + Fn(l.d1) + ' m'}</td><td>${mt(l.t)}</td><td>${gasCorto(l.gas)}</td><td>${mt(l.fin)}</td></tr>`).join('');
   const stopsRows = r.paradas.map(s => `<tr><td>${s.prof} m</td><td>${s.tiempo}'</td><td>${gasCorto(s.gas)}</td><td>${Math.ceil(s.rt - 1e-9)}'</td></tr>`).join('');
-  const fondoBar = Math.ceil(fondoG.litros / bib - 1e-9);
+  const fondoBar = bib ? Math.ceil(fondoG.litros / bib - 1e-9) : null;
   const sacBox = (key, val, gas) => `<label class="sacbox">SAC <input id="sac-${key}" data-sac="${key}" inputmode="decimal" value="${val == null ? '' : Fn(val)}" placeholder="${key === 'f' ? 20 : 16}" aria-label="SAC de ${gas}"> L/min</label>`;
   const sinSac = '<p class="hint" style="margin:6px 0 0">Escribe tu SAC para calcular el gas.</p>';
   const decoCards = decoG.map(g => {
     const L = g.litros, Le = L * 1.5, b = Math.ceil(L / g.cfg.bot - 1e-9), be = Math.ceil(Le / g.cfg.bot - 1e-9);
-    const conSac = !!g.cfg.sac;
-    const opts = DECO_BOT.map(([v, l]) => `<option value="${v}"${v === g.cfg.bot ? ' selected' : ''}>${l}</option>`).join('');
+    const conSac = !!g.cfg.sac, conBot = !!g.cfg.bot;
+    const opts = (conBot ? '' : ejemplo(g.o2 === 100 ? 'S40 (5,7 L)' : 'S80 (11,1 L)')) + DECO_BOT.map(([v, l]) => `<option value="${v}"${v === g.cfg.bot ? ' selected' : ''}>${l}</option>`).join('');
     return `<div class="ngas"><div class="hd"><b>${g.nombre}</b>${sacBox(g.cfg.i, g.cfg.sac, g.nombre)}</div>
-      <label class="f"><span class="l">Botella</span><span class="r"><select data-bot="${g.cfg.i}" aria-label="Botella de ${g.nombre}">${opts}</select></span></label>
+      <label class="f"><span class="l">Botella</span><span class="r"><select data-bot="${g.cfg.i}" required aria-label="Botella de ${g.nombre}">${opts}</select></span></label>
       <div class="vals">
         <div class="val hl"><div class="l">Desde</div><div class="n">${g.desde == null ? '–' : g.desde + ' m'}</div></div>
         <div class="val hl"><div class="l">Tiempo en este gas</div><div class="n">${F(g.tiempo, 0)}'</div></div>
         <div class="val"><div class="l">Litros</div><div class="n">${conSac ? F(L, 0) : '–'}</div></div>
-        <div class="val"><div class="l">Bares</div><div class="n">${conSac ? b : '–'}</div></div>
+        <div class="val"><div class="l">Bares</div><div class="n">${conSac && conBot ? b : '–'}</div></div>
       </div>
-      ${!conSac ? sinSac : g.tiempo > 0 ? `<div class="emer${be > 200 ? ' over' : ''}"><span>Emergencia +50 %</span><span>${F(Le, 0)} L · ${be} bar</span></div>` : ''}</div>`;
+      ${!conSac ? sinSac : !conBot ? '<p class="hint" style="margin:6px 0 0">Elige la botella para ver los bares.</p>' : g.tiempo > 0 ? `<div class="emer${be > 200 ? ' over' : ''}"><span>Emergencia +50 %</span><span>${F(Le, 0)} L · ${be} bar</span></div>` : ''}</div>`;
   }).join('');
 
   out.innerHTML = `<div class="res"><div class="duo">
@@ -260,7 +263,7 @@ function renderDecoCore() {
     <h2 class="sec">Gas necesario para la inmersión</h2>
     <div class="ngas"><div class="hd"><b>Gas de espalda · ${fondoG.nombre}</b>${sacBox('f', sacFondo, 'gas de espalda')}</div>
       <div class="vals"><div class="val"><div class="l">Litros</div><div class="n">${sacFondo ? F(fondoG.litros, 0) : '–'}</div></div>
-      <div class="val"><div class="l">Bares (${bibName()})</div><div class="n">${sacFondo ? fondoBar : '–'}</div></div></div>${sacFondo ? '' : sinSac}</div>
+      <div class="val"><div class="l">Bares${bib ? ` (${bibName()})` : ''}</div><div class="n">${sacFondo && bib ? fondoBar : '–'}</div></div></div>${!sacFondo ? sinSac : !bib ? '<p class="hint" style="margin:6px 0 0">Elige la bibotella para ver los bares.</p>' : ''}</div>
     ${decoCards}`;
   GRAF = { perfil: r.perfil, gf: `${Fn(gfl)}/${Fn(gfh)}` };
   dibujarPerfil();
@@ -358,6 +361,8 @@ function renderGB() {
   const p0 = num('gb-p0') ?? 0, o0 = num('gb-o0') ?? (p0 > 0 ? 0 : 21), h0 = num('gb-h0') ?? 0;
   const p1 = num('gb-p1'), o1 = num('gb-o1'), h1 = num('gb-h1') ?? 0;
   const pr = gbPrecios();
+  if (!$('gb-bot').value) return void (out.innerHTML = msg('info', 'Elige la botella.'));
+  if (!$('gb-mod').value) return void (out.innerHTML = msg('info', 'Elige el modelo de gas (real o ideal).'));
   if (vol == null || vol <= 0) return void (out.innerHTML = msg('info', 'Indica el volumen de la botella.'));
   if (p1 == null || p1 <= 0 || o1 == null || o1 <= 0) return void (out.innerHTML = msg('info', 'Indica la presión y el oxígeno de la mezcla que quieres. Si la botella no está vacía, indica también lo que queda.'));
   if (p0 < 0 || o0 < 0 || h0 < 0 || h1 < 0 || o1 > 100 || o0 > 100) return void (out.innerHTML = msg('bad', 'Revisa los porcentajes y las presiones.'));

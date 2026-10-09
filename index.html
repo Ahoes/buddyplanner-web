@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MyBuddyPlanner (Beta v0.1.15)</title>
+<title>MyBuddyPlanner (Beta v0.1.16)</title>
 <meta name="theme-color" content="#0b1216">
 <meta name="description" content="Planificador de buceo técnico: gas mínimo, consumo, mezclas y descompresión.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -21,7 +21,7 @@
 <body>
 <div class="app">
 <header class="top">
-  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.15</span></div>
+  <div class="brand"><div class="izq"><h1>MyBuddyPlanner</h1><span id="version">Beta v0.1.16</span></div>
     <button id="instalar" class="inst" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Instalar</button></div>
   <nav class="tabs" role="tablist">
     <button role="tab" data-t="gm" aria-selected="true">Gas mín.</button>
@@ -37,8 +37,8 @@
 <section class="tab on" id="t-gm">
   <p class="intro">Gas para que dos buceadores asciendan compartiendo el gas de uno, hasta la siguiente fuente de gas respirable.</p>
   <div class="grid2">
-    <label class="f"><span class="l">Profundidad inicial</span><span class="r"><input id="gm-d1" inputmode="decimal" value="50"><span class="u">m</span></span></label>
-    <label class="f"><span class="l">Profundidad final</span><span class="r"><input id="gm-d2" inputmode="decimal" value="21"><span class="u">m</span></span></label>
+    <label class="f"><span class="l">Profundidad inicial</span><span class="r"><input id="gm-d1" inputmode="decimal" value="" placeholder="50"><span class="u">m</span></span></label>
+    <label class="f"><span class="l">Profundidad final</span><span class="r"><input id="gm-d2" inputmode="decimal" value="" placeholder="21"><span class="u">m</span></span></label>
   </div>
   <p class="hint">La profundidad final es donde llegas a la siguiente fuente de gas respirable (por ejemplo, 21 m con EAN50).</p>
   <label class="f"><span class="l">Bibotella</span><span class="r"><select id="gm-bib" class="bib"></select></span></label>
@@ -50,12 +50,12 @@
   <p class="intro">Cuánto tiempo puedes estar a una profundidad con el gas que te sobra después del gas mínimo.</p>
   <label class="f"><span class="l">Bibotella</span><span class="r"><select id="cs-bib" class="bib"></select></span></label>
   <div class="grid2">
-    <label class="f"><span class="l">Presión total</span><span class="r"><input id="cs-p" inputmode="decimal" value="230"><span class="u">bar</span></span></label>
+    <label class="f"><span class="l">Presión total</span><span class="r"><input id="cs-p" inputmode="decimal" value="" placeholder="230"><span class="u">bar</span></span></label>
     <label class="f"><span class="l">Gas mínimo</span><span class="r"><input id="cs-gm" inputmode="decimal" value=""><span class="u">bar</span></span></label>
   </div>
   <p class="hint" id="cs-gm-hint"></p>
   <div class="grid2">
-    <label class="f"><span class="l">Profundidad</span><span class="r"><input id="cs-d" inputmode="decimal" value="50"><span class="u">m</span></span></label>
+    <label class="f"><span class="l">Profundidad</span><span class="r"><input id="cs-d" inputmode="decimal" value="" placeholder="50"><span class="u">m</span></span></label>
     <label class="f"><span class="l">SAC</span><span class="r"><input id="cs-sac" inputmode="decimal" value="20"><span class="u">L/min</span></span></label>
   </div>
   <div id="cs-out"></div>
@@ -65,8 +65,8 @@
 <section class="tab" id="t-mz">
   <p class="intro">Analiza tu mezcla: hasta dónde puedes bajar por oxígeno y por narcosis.</p>
   <div class="grid2">
-    <label class="f"><span class="l">Oxígeno</span><span class="r"><input id="mz-o2" inputmode="decimal" value="22"><span class="u">%</span></span></label>
-    <label class="f"><span class="l">Helio</span><span class="r"><input id="mz-he" inputmode="decimal" value="35"><span class="u">%</span></span></label>
+    <label class="f"><span class="l">Oxígeno</span><span class="r"><input id="mz-o2" inputmode="decimal" value="" placeholder="21"><span class="u">%</span></span></label>
+    <label class="f"><span class="l">Helio</span><span class="r"><input id="mz-he" inputmode="decimal" value="" placeholder="0"><span class="u">%</span></span></label>
     <label class="f"><span class="l">ppO₂ máxima</span><span class="r"><input id="mz-pp" inputmode="decimal" value="1,29"><span class="u">bar</span></span></label>
     <label class="f"><span class="l">END máxima</span><span class="r"><input id="mz-end" inputmode="decimal" value="30"><span class="u">m</span></span></label>
   </div>
@@ -75,7 +75,7 @@
   <h2 class="sec">Mezcla ideal</h2>
   <p class="intro">Elige profundidad y ppO₂ y te da la mezcla. El oxígeno se redondea hacia abajo y el helio hacia arriba.</p>
   <div class="grid2">
-    <label class="f"><span class="l">Profundidad</span><span class="r"><input id="mi-d" inputmode="decimal" value="50"><span class="u">m</span></span></label>
+    <label class="f"><span class="l">Profundidad</span><span class="r"><input id="mi-d" inputmode="decimal" value="" placeholder="50"><span class="u">m</span></span></label>
     <label class="f"><span class="l">ppO₂</span><span class="r"><input id="mi-pp" inputmode="decimal" value="1,29"><span class="u">bar</span></span></label>
   </div>
   <label class="chk"><input type="checkbox" id="mi-he" checked><span>Con helio (trimix)</span></label>
@@ -94,8 +94,8 @@
     <label class="f"><span class="l">Altitud</span><span class="r"><input id="dc-alt" inputmode="numeric" value="0"><span class="u">m</span></span></label>
   </div>
   <div class="grid2">
-    <label class="f"><span class="l">Profundidad</span><span class="r"><input id="dc-d" inputmode="decimal" value="0"><span class="u">m</span></span></label>
-    <label class="f"><span class="l">Tiempo de fondo</span><span class="r"><input id="dc-t" inputmode="numeric" value="0"><span class="u">min</span></span></label>
+    <label class="f"><span class="l">Profundidad</span><span class="r"><input id="dc-d" inputmode="decimal" value="" placeholder="50"><span class="u">m</span></span></label>
+    <label class="f"><span class="l">Tiempo de fondo</span><span class="r"><input id="dc-t" inputmode="numeric" value="" placeholder="27"><span class="u">min</span></span></label>
   </div>
   <p class="hint">La profundidad y el tiempo llegan de la pestaña Consumo (tiempo redondeado hacia abajo al minuto); puedes cambiarlos. El tiempo de fondo incluye el descenso.</p>
   <div class="grid2">
@@ -105,13 +105,17 @@
   <label class="f"><span class="l">Última parada</span><span class="r"><select id="dc-last"><option value="6">6 m</option><option value="3">3 m</option></select></span></label>
 
   <h2 class="sec">Gases que llevas</h2>
+  <div class="grid2">
+    <label class="f"><span class="l">ppO₂ máx. de fondo</span><span class="r"><input id="dc-ppf" inputmode="decimal" value="1,29"><span class="u">bar</span></span></label>
+    <label class="f"><span class="l">ppO₂ máx. de deco</span><span class="r"><input id="dc-ppd" inputmode="decimal" value="1,6"><span class="u">bar</span></span></label>
+  </div>
   <p class="hint" style="margin-top:4px">Gas de fondo</p>
   <div class="grid3">
     <label class="f"><span class="l">O₂</span><span class="r"><input id="dc-fo2" inputmode="decimal" value="21"><span class="u">%</span></span></label>
-    <label class="f"><span class="l">He</span><span class="r"><input id="dc-fhe" inputmode="decimal" value="35"><span class="u">%</span></span></label>
+    <label class="f"><span class="l">He</span><span class="r"><input id="dc-fhe" inputmode="decimal" value="0"><span class="u">%</span></span></label>
     <label class="f"><span class="l">Bibotella</span><span class="r"><select id="dc-bib" class="bib"></select></span></label>
   </div>
-  <p class="hint">Gases de deco: se cambia a ppO₂ 1,6 (EAN50 a 21 m, oxígeno a 6 m) y cada cambio suma 1 minuto.</p>
+  <p class="hint" id="dc-gh"></p>
   <div id="dc-gases"></div>
   <div class="chips" aria-label="Añadir gas de deco">
     <button class="chip" data-add="50">+ EAN50</button>
@@ -204,6 +208,8 @@
 
 </section>
 
+<button class="chip reset" id="prefs-reset">Restaurar valores por defecto</button>
+<p class="hint" id="prefs-hint">La app recuerda en este dispositivo tus preferencias (GF, ppO₂, END, SAC, velocidades, bibotella…). Los datos de cada inmersión empiezan vacíos.</p>
 <footer class="legal">Herramienta de apoyo para buceadores con formación técnica. No sustituye tu formación, tu ordenador de buceo ni los procedimientos de tu agencia. Revisa cada plan antes de bucear; el planificador de deco es un prototipo pendiente de validar.<span class="copy">© 2026 MyBuddyPlanner. Todos los derechos reservados.</span></footer>
 </div>
 <div class="sheet-bg" id="inst-sheet" hidden>

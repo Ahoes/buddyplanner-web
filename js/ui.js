@@ -8,9 +8,23 @@ const Fa = (x) => { let s = F(x, 2); if (s.endsWith('0')) s = s.slice(0, -1); re
 const row = (k, v) => `<div class="row"><span>${k}</span><b>${v}</b></div>`;
 const msg = (c, t) => `<div class="msg ${c}">${t}</div>`;
 
+// --- Preferencias: valores por defecto que la app recuerda en este dispositivo ---
+// Los datos de cada inmersión (profundidades, tiempo, presión, mezcla) empiezan vacíos.
+const PREFS = ['cs-sac', 'mz-pp', 'mz-end', 'mi-pp', 'mi-he', 'dc-mod', 'dc-gfl', 'dc-gfh', 'dc-sal', 'dc-alt', 'dc-vd', 'dc-va', 'dc-last', 'dc-ppf', 'dc-ppd'];
+const valorDe = (el) => el.type === 'checkbox' ? el.checked : el.value;
+const ponerValor = (el, v) => { if (el.type === 'checkbox') el.checked = !!v; else el.value = v; };
+const PREF_DEF = { ...Object.fromEntries(PREFS.map((id) => [id, valorDe($(id))])), bib: 24, sacFondo: 20 };
+let prefs = {};
+try { prefs = JSON.parse(localStorage.getItem('bp-prefs') || '{}') || {}; } catch (e) {}
+PREFS.forEach((id) => { if (prefs[id] != null) ponerValor($(id), prefs[id]); });
+function guardarPrefs() {
+  prefs = { ...Object.fromEntries(PREFS.map((id) => [id, valorDe($(id))])), bib, sacFondo };
+  try { localStorage.setItem('bp-prefs', JSON.stringify(prefs)); } catch (e) {}
+}
+
 const BIB = [[20, '2x10 L'], [24, '2x12 L'], [30, '2x15 L'], [36, '2x18 L']];
 const DECO_BOT = [[5.7, 'S40 (5,7 L)'], [6, '6 L'], [7, '7 L'], [11.1, 'S80 (11,1 L)']];
-let bib = 24;
+let bib = [20, 24, 30, 36].includes(prefs.bib) ? prefs.bib : PREF_DEF.bib;
 const bibName = () => BIB.find(b => b[0] === bib)[1];
 document.querySelectorAll('select.bib').forEach(s => {
   s.innerHTML = BIB.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
@@ -116,8 +130,8 @@ function renderMI() {
 }
 
 // --- Deco ---
-let decoGases = [{ o2: 50, he: 0, bot: 11.1, sac: 16 }, { o2: 100, he: 0, bot: 5.7, sac: 16 }];
-let sacFondo = 20;
+let decoGases = []; // sin gases de deco por defecto
+let sacFondo = prefs.sacFondo > 0 ? prefs.sacFondo : PREF_DEF.sacFondo;
 function buildDecoGases() {
   $('dc-gases').innerHTML = decoGases.map((g, i) => `<div class="gasrow">
     <label class="f"><span class="l">O₂</span><span class="r"><input data-g="${i}" data-k="o2" inputmode="decimal" value="${g.o2}"><span class="u">%</span></span></label>
@@ -161,10 +175,14 @@ function renderDecoCore() {
   const out = $('dc-out');
   const d = num('dc-d'), t = num('dc-t'), gfl = num('dc-gfl'), gfh = num('dc-gfh'), alt = num('dc-alt') ?? 0;
   const fo2 = num('dc-fo2'), fhe = num('dc-fhe') ?? 0, vd = num('dc-vd'), va = num('dc-va');
-  const ppMax = num('mz-pp') ?? 1.29, endMax = num('mz-end') ?? 30;
+  const ppMax = num('dc-ppf'), ppDeco = num('dc-ppd'), endMax = num('mz-end') ?? 30;
+  const ppDecoOk = ppDeco != null && ppDeco >= 1 && ppDeco <= 1.7;
+  // cambio de gas: a la primera parada (múltiplo de 3 m) donde la ppO₂ no pasa del máximo de deco
+  const cambio = (o2) => Math.floor((ppDeco / (o2 / 100) - 1) * 10 / 3 + 1e-9) * 3;
+  $('dc-gh').textContent = ppDecoOk ? `Gases de deco: se cambia a ppO₂ ${Fa(ppDeco)} (EAN50 a ${cambio(50)} m, oxígeno a ${cambio(100)} m) y cada cambio suma 1 minuto.` : 'Gases de deco: cada cambio suma 1 minuto.';
   // nombres de gases de deco
   decoGases.forEach((g, i) => { const el = $('dc-gn-' + i); if (!el) return;
-    el.innerHTML = (g.o2 > 0 && g.o2 <= 100) ? `<b>${ENG.nombreGas(g.o2, g.he || 0)}</b>MOD ${F((1.6 / (g.o2 / 100) - 1) * 10, 0)} m` : '<b>–</b>'; });
+    el.innerHTML = (g.o2 > 0 && g.o2 <= 100) ? `<b>${ENG.nombreGas(g.o2, g.he || 0)}</b>${ppDecoOk ? `MOD ${F((ppDeco / (g.o2 / 100) - 1) * 10, 0)} m` : ''}` : '<b>–</b>'; });
 
   if (d == null || t == null || d <= 0 || t <= 0) return void (out.innerHTML = msg('info', 'Introduce profundidad y tiempo de fondo.'));
   if (d > 150) return void (out.innerHTML = msg('bad', 'Profundidad fuera de rango (máximo 150 m).'));
@@ -172,11 +190,13 @@ function renderDecoCore() {
   if (alt < 0 || alt > 4500) return void (out.innerHTML = msg('bad', 'Altitud fuera de rango (0 a 4.500 m).'));
   if (vd == null || va == null || vd < 3 || vd > 30 || va < 3 || va > 18) return void (out.innerHTML = msg('bad', 'Revisa las velocidades: descenso entre 3 y 30 m/min, ascenso entre 3 y 18 m/min.'));
   if (fo2 == null || fo2 <= 0 || fhe < 0 || fo2 + fhe > 100) return void (out.innerHTML = msg('bad', 'Revisa el gas de fondo: O₂ y He no pueden sumar más del 100 %.'));
+  if (ppMax == null || ppMax < 0.5 || ppMax > 1.6) return void (out.innerHTML = msg('bad', 'Revisa la ppO₂ máxima de fondo: entre 0,5 y 1,6 bar.'));
+  if (!ppDecoOk) return void (out.innerHTML = msg('bad', 'Revisa la ppO₂ máxima de deco: entre 1,0 y 1,7 bar.'));
   if (fo2 > 40) return void (out.innerHTML = msg('bad', 'Como gas de fondo el máximo es EAN40. A partir de EAN41 ya se considera gas descompresivo: añádelo en los gases de deco.'));
   const validos = decoGases.map((g, i) => ({ ...g, i })).filter(g => g.o2 > 0 && g.o2 <= 100 && (g.he || 0) >= 0 && g.o2 + (g.he || 0) <= 100);
 
   const base = { modelo: $('dc-mod').value, prof: d, tiempo: t, gfLow: gfl, gfHigh: gfh, salinidad: $('dc-sal').value, altitud: alt, ultimaParada: Number($('dc-last').value),
-    fondo: { o2: fo2, he: fhe }, deco: validos.map(g => ({ o2: g.o2, he: g.he || 0, sac: g.sac || 16 })), vDesc: vd, vAsc1: va, vAsc2: va, ppo2Deco: 1.6, sacFondo, sacDeco: 16 };
+    fondo: { o2: fo2, he: fhe }, deco: validos.map(g => ({ o2: g.o2, he: g.he || 0, sac: g.sac || 16 })), vDesc: vd, vAsc1: va, vAsc2: va, ppo2Deco: ppDeco, sacFondo, sacDeco: 16 };
   const r = ENG.planDeco(base);
   if (r.error) return void (out.innerHTML = msg('bad', r.error));
   const dm = (x) => Math.ceil(x.deco - 1e-9);
@@ -326,12 +346,12 @@ window.addEventListener('resize', () => { const b = $('dc-chart'); if (b && b.cl
 // Solo se copian cuando cambia el resultado de Consumo, así se respeta lo que el usuario escriba en Deco.
 let csCopiado = null;
 function copiarConsumoADeco() {
-  const v = CS ? { d: CS.d, t: Math.floor(CS.tiempo + 1e-9) } : { d: 0, t: 0 };
+  const v = CS ? { d: Fn(CS.d), t: String(Math.floor(CS.tiempo + 1e-9)) } : { d: '', t: '' };
   const clave = `${v.d}/${v.t}`;
   if (clave === csCopiado) return;
   csCopiado = clave;
-  $('dc-d').value = Fn(v.d);
-  $('dc-t').value = String(v.t);
+  $('dc-d').value = v.d;
+  $('dc-t').value = v.t;
 }
 
 // --- Gas Blender ---
@@ -383,6 +403,17 @@ function renderGB() {
 
 
 document.addEventListener('input', (e) => { if (GB_PRECIOS.includes(e.target.id)) guardarPrecios(); });
+
+document.addEventListener('input', (e) => { if (PREFS.includes(e.target.id) || e.target.dataset.sac === 'f') guardarPrefs(); });
+document.addEventListener('change', (e) => { if (PREFS.includes(e.target.id) || e.target.classList.contains('bib')) guardarPrefs(); });
+$('prefs-reset').addEventListener('click', () => {
+  PREFS.forEach((id) => ponerValor($(id), PREF_DEF[id]));
+  bib = PREF_DEF.bib; sacFondo = PREF_DEF.sacFondo;
+  document.querySelectorAll('select.bib').forEach((o) => o.value = String(bib));
+  try { localStorage.removeItem('bp-prefs'); } catch (e) {}
+  prefs = {};
+  renderAll();
+});
 
 function renderAll() { renderGM(); renderCS(); copiarConsumoADeco(); renderMZ(); renderMI(); renderDeco(); renderGB(); }
 buildDecoGases();
